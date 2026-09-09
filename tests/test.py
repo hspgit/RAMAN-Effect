@@ -31,7 +31,7 @@ spectra_ = ramanspy.preprocessing.normalise.MinMax().apply(spectra)
 # Plot the mean spectra of each species.
 plt.figure(figsize=(6.5, 9))
 ramanspy.plot.mean_spectra(spectra_, label=y_labels, plot_type="single stacked", title=None)
-plt.savefig("plot.png", bbox_inches='tight')
+plt.savefig("results/plot.png", bbox_inches='tight')
 plt.show()
 
 # %%

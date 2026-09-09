@@ -3,7 +3,7 @@ import torch
 import os
 import sys
 sys.path.append(os.getcwd())
-from train import Raman1DCNN
+from src.model import Raman1DCNN
 
 try:
     X = np.load('data/X_reference.npy')
