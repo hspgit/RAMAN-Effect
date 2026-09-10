@@ -33,7 +33,7 @@ def main():
                         help='enable on-the-fly data augmentation during training')
     
     # Optional arguments to allow switching models dynamically in the future
-    parser.add_argument('--model-type', type=str, default='cnn', choices=['cnn'],
+    parser.add_argument('--model-type', type=str, default='resnet', choices=['resnet', 'legacy_cnn'],
                         help='type of model to use')
                         
     args = parser.parse_args()
@@ -81,8 +81,11 @@ def main():
         val_loader = None
 
     # 2. Initialize Model
-    if args.model_type == 'cnn':
+    if args.model_type == 'resnet':
         model = Raman1DCNN(num_classes=num_classes).to(device)
+    elif args.model_type == 'legacy_cnn':
+        from legacy_baseline.model import LegacyCNN
+        model = LegacyCNN(num_classes=num_classes).to(device)
     else:
         raise ValueError(f"Unknown model type: {args.model_type}")
 

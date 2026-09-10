@@ -1,0 +1,70 @@
+/Users/hrishikesh/Developer/RAMAN-Effect/.venv/lib/python3.13/site-packages/ramanspy/core.py:35: SyntaxWarning: invalid escape sequence '\ '
+  The Raman wavenumber axis (in cm\ :sup:`-1`). Order and length must match the last dimension of ``spectral_data``.
+Using device: mps
+Loading reference dataset...
+Applying RamanSPy preprocessing to data/X_reference.npy...
+Detected 30 classes.
+Split reference data: 40200 train / 19800 val
+
+--- Starting Reference Training ---
+Pre-train Epoch: 1 [0/40200 (0%)]	Loss: 3.549386	Acc: 0.78%
+Pre-train Epoch: 1 [12800/40200 (32%)]	Loss: 2.562087	Acc: 18.52%
+Pre-train Epoch: 1 [25600/40200 (63%)]	Loss: 2.115295	Acc: 24.55%
+Pre-train Epoch: 1 [38400/40200 (95%)]	Loss: 2.048101	Acc: 29.27%
+Pre-train Epoch: 2 [0/40200 (0%)]	Loss: 1.934278	Acc: 42.19%
+Pre-train Epoch: 2 [12800/40200 (32%)]	Loss: 1.940339	Acc: 45.96%
+Pre-train Epoch: 2 [25600/40200 (63%)]	Loss: 1.674813	Acc: 48.37%
+Pre-train Epoch: 2 [38400/40200 (95%)]	Loss: 1.586713	Acc: 50.68%
+Pre-train Epoch: 3 [0/40200 (0%)]	Loss: 1.365041	Acc: 68.75%
+Pre-train Epoch: 3 [12800/40200 (32%)]	Loss: 1.479931	Acc: 58.33%
+Pre-train Epoch: 3 [25600/40200 (63%)]	Loss: 1.155892	Acc: 59.56%
+Pre-train Epoch: 3 [38400/40200 (95%)]	Loss: 1.317356	Acc: 60.63%
+Pre-train Epoch: 4 [0/40200 (0%)]	Loss: 1.364905	Acc: 58.59%
+Pre-train Epoch: 4 [12800/40200 (32%)]	Loss: 1.153467	Acc: 64.75%
+Pre-train Epoch: 4 [25600/40200 (63%)]	Loss: 1.070303	Acc: 65.65%
+Pre-train Epoch: 4 [38400/40200 (95%)]	Loss: 1.110396	Acc: 66.48%
+Pre-train Epoch: 5 [0/40200 (0%)]	Loss: 1.188748	Acc: 67.97%
+Pre-train Epoch: 5 [12800/40200 (32%)]	Loss: 1.010678	Acc: 70.27%
+Pre-train Epoch: 5 [25600/40200 (63%)]	Loss: 0.989888	Acc: 70.15%
+Pre-train Epoch: 5 [38400/40200 (95%)]	Loss: 1.095848	Acc: 70.17%
+Pre-train Epoch: 6 [0/40200 (0%)]	Loss: 1.010271	Acc: 63.28%
+Pre-train Epoch: 6 [12800/40200 (32%)]	Loss: 0.947939	Acc: 72.46%
+Pre-train Epoch: 6 [25600/40200 (63%)]	Loss: 0.984046	Acc: 72.33%
+Pre-train Epoch: 6 [38400/40200 (95%)]	Loss: 0.818417	Acc: 72.33%
+Pre-train Epoch: 7 [0/40200 (0%)]	Loss: 0.866928	Acc: 75.00%
+Pre-train Epoch: 7 [12800/40200 (32%)]	Loss: 0.929817	Acc: 73.17%
+Pre-train Epoch: 7 [25600/40200 (63%)]	Loss: 0.899603	Acc: 73.49%
+Pre-train Epoch: 7 [38400/40200 (95%)]	Loss: 0.879907	Acc: 73.52%
+Pre-train Epoch: 8 [0/40200 (0%)]	Loss: 0.940254	Acc: 76.56%
+Pre-train Epoch: 8 [12800/40200 (32%)]	Loss: 0.932340	Acc: 74.74%
+Pre-train Epoch: 8 [25600/40200 (63%)]	Loss: 0.889594	Acc: 74.55%
+Pre-train Epoch: 8 [38400/40200 (95%)]	Loss: 0.880908	Acc: 74.75%
+Pre-train Epoch: 9 [0/40200 (0%)]	Loss: 0.894360	Acc: 73.44%
+Pre-train Epoch: 9 [12800/40200 (32%)]	Loss: 0.888608	Acc: 74.66%
+Pre-train Epoch: 9 [25600/40200 (63%)]	Loss: 0.808440	Acc: 74.99%
+Pre-train Epoch: 9 [38400/40200 (95%)]	Loss: 0.858857	Acc: 75.15%
+Pre-train Epoch: 10 [0/40200 (0%)]	Loss: 0.992519	Acc: 72.66%
+Pre-train Epoch: 10 [12800/40200 (32%)]	Loss: 0.901209	Acc: 75.34%
+Pre-train Epoch: 10 [25600/40200 (63%)]	Loss: 0.897205	Acc: 75.35%
+Pre-train Epoch: 10 [38400/40200 (95%)]	Loss: 0.766977	Acc: 75.45%
+
+--- Evaluating on Validation Split ---
+
+Validation set: Average loss: 0.8671, Accuracy: 14870/19800 (75.10%)
+
+Reference model saved to models/raman_reference_model.pth
+
+--- Starting Finetuning ---
+Applying RamanSPy preprocessing to data/X_finetune.npy...
+Finetune Epoch: 1 [0/3000 (0%)]	Loss: 1.627702	Acc: 51.56%
+Finetune Epoch: 2 [0/3000 (0%)]	Loss: 1.605524	Acc: 51.56%
+Finetune Epoch: 3 [0/3000 (0%)]	Loss: 1.605817	Acc: 49.22%
+Finetune Epoch: 4 [0/3000 (0%)]	Loss: 1.592981	Acc: 53.91%
+Finetune Epoch: 5 [0/3000 (0%)]	Loss: 1.483508	Acc: 60.16%
+Finetuned model saved to models/raman_finetuned_model.pth
+
+--- Evaluating on Test Set ---
+Applying RamanSPy preprocessing to data/X_test.npy...
+
+Test set: Average loss: 1.5941, Accuracy: 1611/3000 (53.70%)
+

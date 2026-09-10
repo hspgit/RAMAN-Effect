@@ -42,3 +42,6 @@ models/
 # Python compiled files
 *.pyc
 __pycache__/
+
+# Node / JS
+node_modules/
