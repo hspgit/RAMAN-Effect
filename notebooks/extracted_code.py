@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+
 #Normalizing per class
 #Bootstrapping to generate new data for each class
 #given a class, the set of functions should be able to generate new data
@@ -116,6 +117,7 @@ dfc4_2['Type'] = 51 * ['c4']
 dfphsh['Type'] = 51 * ['phsh']
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+
 df = pd.concat([dfc0_1, dfc1_1, dfc1_2, dfc2_2, dfc3_1, dfc3_2, dfc4_1, dfc4_2, dfphsh])
 df = df.reset_index(drop=True)
 df_normed = normalize(df.iloc[:, :1014])
@@ -145,7 +147,19 @@ labels = list(df_normed.columns)[1013:]
 labels
 import tensorflow as tf
 import tensorflow.keras as keras
-from tensorflow.keras.layers import Dropout, Dense, Conv1D, AveragePooling1D, GlobalAveragePooling1D, GlobalMaxPooling1D, Input, BatchNormalization, Reshape, Flatten, MaxPooling1D
+from tensorflow.keras.layers import (
+    AveragePooling1D,
+    BatchNormalization,
+    Conv1D,
+    Dense,
+    Dropout,
+    Flatten,
+    GlobalAveragePooling1D,
+    GlobalMaxPooling1D,
+    Input,
+    MaxPooling1D,
+    Reshape,
+)
 from tensorflow.keras.regularizers import l2
 
 keras.backend.clear_session()
@@ -200,6 +214,7 @@ y_rand = data_array[:, 1013:]
 y_pred = model.predict(X_rand)
 #creates the classes from the prediction and the random data, because we have classifications not numerical values
 from sklearn.metrics import accuracy_score
+
 y_pred_classes = np.argmax(y_pred, axis=1)
 y_rand_classes = np.argmax(y_rand, axis=1)
 #prints accuracy
@@ -213,8 +228,9 @@ plt.ylabel('Accuracy')
 plt.legend()
 plt.show()
 #confusion matrix for the random generated data
-from sklearn.metrics import confusion_matrix
 import seaborn as sns
+from sklearn.metrics import confusion_matrix
+
 cm = confusion_matrix(y_rand_classes, y_pred_classes)
 plt.figure(figsize=(8, 6))
 sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')

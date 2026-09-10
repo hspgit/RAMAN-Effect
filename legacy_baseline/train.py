@@ -1,16 +1,18 @@
 import os
 import sys
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
-import numpy as np
 
 # Add parent directory to path to import from src
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from src.dataset import RamanDataset
-from src.engine import train_epoch, evaluate
 from model import LegacyCNN
+from src.dataset import RamanDataset
+from src.engine import evaluate, train_epoch
+
 
 def main():
     print("Running Legacy CNN from Notebook Baseline...")

@@ -1,8 +1,10 @@
+import os
+
 import numpy as np
+import ramanspy as rp
 import torch
 from torch.utils.data import Dataset
-import os
-import ramanspy as rp
+
 
 class RamanDataset(Dataset):
     def __init__(self, X_path, y_path, label_mapping=None, apply_preprocessing=True):

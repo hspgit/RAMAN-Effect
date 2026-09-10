@@ -1,7 +1,9 @@
-import numpy as np
-import torch
 import os
 import sys
+
+import numpy as np
+import torch
+
 sys.path.append(os.getcwd())
 from src.model import Raman1DCNN
 

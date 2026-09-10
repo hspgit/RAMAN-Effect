@@ -1,5 +1,6 @@
 import torch
 
+
 def train_epoch(model, device, train_loader, optimizer, criterion, epoch, phase="Train"):
     model.train()
     running_loss = 0.0

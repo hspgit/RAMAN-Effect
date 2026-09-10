@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class LegacyCNN(nn.Module):
     """
     PyTorch implementation of the 6-layer CNN from NormalizedModelWithBootstrapping.ipynb

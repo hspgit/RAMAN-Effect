@@ -1,14 +1,16 @@
 import argparse
 import os
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-import numpy as np
 
 from src.dataset import RamanDataset
+from src.engine import evaluate, train_epoch
 from src.model import Raman1DCNN
-from src.engine import train_epoch, evaluate
+
 
 def main():
     parser = argparse.ArgumentParser(description='Deep Learning for Raman Spectra Classification')
