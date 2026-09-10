@@ -48,7 +48,7 @@ class Raman1DCNN(nn.Module):
         self.classifier = nn.Sequential(
             nn.Linear(128, 128),
             nn.ReLU(inplace=True),
-            nn.Dropout(0.2),
+            nn.Dropout(0.4),
             nn.Linear(128, num_classes)
         )
 

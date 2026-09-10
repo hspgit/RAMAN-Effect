@@ -25,6 +25,11 @@ def main():
     parser.add_argument('--save-dir', type=str, default='models',
                         help='directory to save model checkpoints')
     
+    parser.add_argument('--val-split', type=float, default=0.0,
+                        help='fraction of reference data to use for validation (default: 0.0)')
+    parser.add_argument('--augment', action='store_true',
+                        help='enable on-the-fly data augmentation during training')
+    
     # Optional arguments to allow switching models dynamically in the future
     parser.add_argument('--model-type', type=str, default='cnn', choices=['cnn'],
                         help='type of model to use')
@@ -47,12 +52,31 @@ def main():
 
     # 1. Load Reference Data
     print("Loading reference dataset...")
-    ref_dataset = RamanDataset(os.path.join(args.data_dir, 'X_reference.npy'),
-                               os.path.join(args.data_dir, 'y_reference.npy'))
-    ref_loader = DataLoader(ref_dataset, batch_size=args.batch_size, shuffle=True)
+    full_ref_dataset = RamanDataset(os.path.join(args.data_dir, 'X_reference.npy'),
+                                    os.path.join(args.data_dir, 'y_reference.npy'))
     
-    num_classes = len(np.unique(ref_dataset.y))
+    num_classes = len(np.unique(full_ref_dataset.y))
     print(f"Detected {num_classes} classes.")
+    
+    from src.dataset import AugmentedDataset
+    
+    if args.val_split > 0:
+        from torch.utils.data import random_split
+        val_size = int(args.val_split * len(full_ref_dataset))
+        train_size = len(full_ref_dataset) - val_size
+        ref_dataset, val_dataset = random_split(full_ref_dataset, [train_size, val_size], generator=torch.Generator().manual_seed(42))
+        
+        # Apply augmentation only to training data
+        train_dataset_wrapped = AugmentedDataset(ref_dataset, augment=args.augment)
+        val_dataset_wrapped = AugmentedDataset(val_dataset, augment=False)
+        
+        ref_loader = DataLoader(train_dataset_wrapped, batch_size=args.batch_size, shuffle=True)
+        val_loader = DataLoader(val_dataset_wrapped, batch_size=args.batch_size * 2, shuffle=False)
+        print(f"Split reference data: {train_size} train / {val_size} val")
+    else:
+        train_dataset_wrapped = AugmentedDataset(full_ref_dataset, augment=args.augment)
+        ref_loader = DataLoader(train_dataset_wrapped, batch_size=args.batch_size, shuffle=True)
+        val_loader = None
 
     # 2. Initialize Model
     if args.model_type == 'cnn':
@@ -61,7 +85,7 @@ def main():
         raise ValueError(f"Unknown model type: {args.model_type}")
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=0.01)
 
     # 3. Train on Reference Data
     print("\n--- Starting Reference Training ---")
@@ -69,6 +93,10 @@ def main():
     for epoch in range(1, args.epochs + 1):
         train_epoch(model, device, ref_loader, optimizer, criterion, epoch, phase="Pre-train")
         scheduler.step()
+        
+    if val_loader is not None:
+        print("\n--- Evaluating on Validation Split ---")
+        evaluate(model, device, val_loader, criterion, phase="Validation")
     
     ref_model_path = os.path.join(args.save_dir, 'raman_reference_model.pth')
     torch.save(model.state_dict(), ref_model_path)
@@ -80,7 +108,7 @@ def main():
     
     if os.path.exists(finetune_x) and os.path.exists(finetune_y) and args.finetune_epochs > 0:
         print("\n--- Starting Finetuning ---")
-        finetune_dataset = RamanDataset(finetune_x, finetune_y, label_mapping=ref_dataset.label_mapping)
+        finetune_dataset = RamanDataset(finetune_x, finetune_y, label_mapping=full_ref_dataset.label_mapping)
         finetune_loader = DataLoader(finetune_dataset, batch_size=args.batch_size, shuffle=True)
         
         # Optionally reduce learning rate for finetuning
@@ -103,7 +131,7 @@ def main():
     
     if os.path.exists(test_x) and os.path.exists(test_y):
         print("\n--- Evaluating on Test Set ---")
-        test_dataset = RamanDataset(test_x, test_y, label_mapping=ref_dataset.label_mapping)
+        test_dataset = RamanDataset(test_x, test_y, label_mapping=full_ref_dataset.label_mapping)
         test_loader = DataLoader(test_dataset, batch_size=args.batch_size * 2, shuffle=False)
         evaluate(model, device, test_loader, criterion, phase="Test")
     else:

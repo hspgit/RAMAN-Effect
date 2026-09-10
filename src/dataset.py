@@ -71,3 +71,37 @@ class RamanDataset(Dataset):
 
     def __getitem__(self, idx):
         return torch.tensor(self.X[idx]), torch.tensor(self.y[idx])
+
+class AugmentedDataset(Dataset):
+    """
+    Wraps a PyTorch Dataset (or Subset) to apply on-the-fly augmentation.
+    """
+    def __init__(self, dataset, augment=False):
+        self.dataset = dataset
+        self.augment = augment
+        
+    def __len__(self):
+        return len(self.dataset)
+        
+    def __getitem__(self, idx):
+        x, y = self.dataset[idx]
+        
+        if self.augment:
+            # Convert back to numpy for augmentation
+            x_np = x.numpy()
+            
+            # 1. Random shift (roll)
+            shift = np.random.randint(-5, 6)
+            x_np = np.roll(x_np, shift, axis=-1)
+            
+            # 2. Random Gaussian noise
+            noise = np.random.normal(0, 0.01, x_np.shape).astype(np.float32)
+            x_np = x_np + noise
+            
+            # 3. Random scale
+            scale = np.random.uniform(0.95, 1.05)
+            x_np = x_np * scale
+            
+            x = torch.tensor(x_np)
+            
+        return x, y
