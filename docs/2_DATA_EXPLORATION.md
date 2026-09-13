@@ -54,6 +54,7 @@ The main training dataset is stored in `.npy` (NumPy) files under the `data/` di
 Based on a preliminary load of the reference data, the dataset exhibits the following properties:
 - **Total Samples**: 60,000
 - **Spectral Length (Features)**: 1,000 points per spectrum
+- **Wavenumber Range**: 381.98 to 1792.4 cm⁻¹
 - **Number of Classes**: 30 distinct classes
 - **Class Distribution**: Perfectly balanced! There are exactly 2,000 samples for each of the 30 classes.
 
