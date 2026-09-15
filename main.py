@@ -22,6 +22,8 @@ def main():
                         help='number of epochs for finetuning (default: 5)')
     parser.add_argument('--lr', type=float, default=0.001,
                         help='learning rate (default: 0.001)')
+    parser.add_argument('--weight-decay', type=float, default=0.01,
+                        help='L2 penalty weight decay (default: 0.01)')
     parser.add_argument('--data-dir', type=str, default='data',
                         help='directory containing the .npy files')
     parser.add_argument('--save-dir', type=str, default='models',
@@ -32,8 +34,11 @@ def main():
     parser.add_argument('--augment', action='store_true',
                         help='enable on-the-fly data augmentation during training')
     
+    parser.add_argument('--mixup-alpha', type=float, default=0.0,
+                        help='alpha parameter for mixup augmentation (default: 0.0, i.e., disabled)')
+    
     # Optional arguments to allow switching models dynamically in the future
-    parser.add_argument('--model-type', type=str, default='resnet', choices=['resnet', 'legacy_cnn'],
+    parser.add_argument('--model-type', type=str, default='resnet', choices=['resnet', 'legacy_cnn', 'transformer', 'multiscale_cnn', 'fusion'],
                         help='type of model to use')
                         
     args = parser.parse_args()
@@ -86,26 +91,55 @@ def main():
     elif args.model_type == 'legacy_cnn':
         from legacy_baseline.model import LegacyCNN
         model = LegacyCNN(num_classes=num_classes).to(device)
+    elif args.model_type == 'transformer':
+        from src.model import Transformer1D
+        model = Transformer1D(num_classes=num_classes).to(device)
+    elif args.model_type == 'multiscale_cnn':
+        from src.model import MultiscaleCNN
+        model = MultiscaleCNN(num_classes=num_classes).to(device)
+    elif args.model_type == 'fusion':
+        from src.model import FusionNet
+        model = FusionNet(num_classes=num_classes).to(device)
     else:
         raise ValueError(f"Unknown model type: {args.model_type}")
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=0.01)
+    optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
     # 3. Train on Reference Data
     print("\n--- Starting Reference Training ---")
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+    
+    best_val_loss = float('inf')
+    patience = 10
+    patience_counter = 0
+    ref_model_path = os.path.join(args.save_dir, 'raman_reference_model.pth')
+    
     for epoch in range(1, args.epochs + 1):
-        train_epoch(model, device, ref_loader, optimizer, criterion, epoch, phase="Pre-train")
+        train_epoch(model, device, ref_loader, optimizer, criterion, epoch, phase="Pre-train", mixup_alpha=args.mixup_alpha)
         scheduler.step()
         
-    if val_loader is not None:
-        print("\n--- Evaluating on Validation Split ---")
-        evaluate(model, device, val_loader, criterion, phase="Validation")
+        if val_loader is not None:
+            val_loss, val_acc = evaluate(model, device, val_loader, criterion, phase="Validation")
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                patience_counter = 0
+                torch.save(model.state_dict(), ref_model_path)
+                print(f"--> Best validation loss improved. Saved model to {ref_model_path}")
+            else:
+                patience_counter += 1
+                print(f"--> No improvement in validation loss. Patience: {patience_counter}/{patience}")
+                
+            if patience_counter >= patience:
+                print(f"\nEarly stopping triggered at epoch {epoch}! Reverting to best model.")
+                break
     
-    ref_model_path = os.path.join(args.save_dir, 'raman_reference_model.pth')
-    torch.save(model.state_dict(), ref_model_path)
-    print(f"Reference model saved to {ref_model_path}")
+    if val_loader is None:
+        torch.save(model.state_dict(), ref_model_path)
+        print(f"Reference model saved to {ref_model_path}")
+    elif os.path.exists(ref_model_path):
+        model.load_state_dict(torch.load(ref_model_path, weights_only=True))
+        print("Loaded best reference model for finetuning.")
 
     # 4. Finetune Data (if available)
     finetune_x = os.path.join(args.data_dir, 'X_finetune.npy')
@@ -121,7 +155,7 @@ def main():
         scheduler_ft = optim.lr_scheduler.CosineAnnealingLR(optimizer_ft, T_max=args.finetune_epochs)
         
         for epoch in range(1, args.finetune_epochs + 1):
-            train_epoch(model, device, finetune_loader, optimizer_ft, criterion, epoch, phase="Finetune")
+            train_epoch(model, device, finetune_loader, optimizer_ft, criterion, epoch, phase="Finetune", mixup_alpha=args.mixup_alpha)
             scheduler_ft.step()
             
         ft_model_path = os.path.join(args.save_dir, 'raman_finetuned_model.pth')

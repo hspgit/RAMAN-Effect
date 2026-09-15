@@ -1,0 +1,315 @@
+Using device: mps
+Loading reference dataset...
+Applying RamanSPy preprocessing to data/X_reference.npy...
+Detected 30 classes.
+Split reference data: 40200 train / 19800 val
+
+--- Starting Reference Training ---
+Pre-train Epoch: 1 [0/40200 (0%)]	Loss: 3.586607	Acc: 1.56%
+Pre-train Epoch: 1 [6400/40200 (16%)]	Loss: 2.360161	Acc: 24.26%
+Pre-train Epoch: 1 [12800/40200 (32%)]	Loss: 1.651772	Acc: 34.16%
+Pre-train Epoch: 1 [19200/40200 (48%)]	Loss: 1.225017	Acc: 40.74%
+Pre-train Epoch: 1 [25600/40200 (64%)]	Loss: 1.393559	Acc: 45.74%
+Pre-train Epoch: 1 [32000/40200 (79%)]	Loss: 1.185990	Acc: 49.62%
+Pre-train Epoch: 1 [38400/40200 (95%)]	Loss: 1.345394	Acc: 52.75%
+
+Validation set: Average loss: 1.0859, Accuracy: 13465/19800 (68.01%)
+
+--> Best validation loss improved. Saved model to models/raman_reference_model.pth
+Pre-train Epoch: 2 [0/40200 (0%)]	Loss: 1.272447	Acc: 65.62%
+Pre-train Epoch: 2 [6400/40200 (16%)]	Loss: 0.862590	Acc: 71.13%
+Pre-train Epoch: 2 [12800/40200 (32%)]	Loss: 0.829104	Acc: 71.70%
+Pre-train Epoch: 2 [19200/40200 (48%)]	Loss: 0.808460	Acc: 72.07%
+Pre-train Epoch: 2 [25600/40200 (64%)]	Loss: 0.974273	Acc: 72.66%
+Pre-train Epoch: 2 [32000/40200 (79%)]	Loss: 0.712518	Acc: 73.24%
+Pre-train Epoch: 2 [38400/40200 (95%)]	Loss: 0.763143	Acc: 73.13%
+
+Validation set: Average loss: 0.8923, Accuracy: 14612/19800 (73.80%)
+
+--> Best validation loss improved. Saved model to models/raman_reference_model.pth
+Pre-train Epoch: 3 [0/40200 (0%)]	Loss: 0.919922	Acc: 70.31%
+Pre-train Epoch: 3 [6400/40200 (16%)]	Loss: 0.953235	Acc: 75.99%
+Pre-train Epoch: 3 [12800/40200 (32%)]	Loss: 0.753867	Acc: 76.24%
+Pre-train Epoch: 3 [19200/40200 (48%)]	Loss: 0.884724	Acc: 76.44%
+Pre-train Epoch: 3 [25600/40200 (64%)]	Loss: 0.812989	Acc: 76.42%
+Pre-train Epoch: 3 [32000/40200 (79%)]	Loss: 0.793237	Acc: 76.62%
+Pre-train Epoch: 3 [38400/40200 (95%)]	Loss: 0.835924	Acc: 76.73%
+
+Validation set: Average loss: 0.7538, Accuracy: 15443/19800 (77.99%)
+
+--> Best validation loss improved. Saved model to models/raman_reference_model.pth
+Pre-train Epoch: 4 [0/40200 (0%)]	Loss: 0.731151	Acc: 79.69%
+Pre-train Epoch: 4 [6400/40200 (16%)]	Loss: 0.860472	Acc: 77.92%
+Pre-train Epoch: 4 [12800/40200 (32%)]	Loss: 0.736358	Acc: 78.40%
+Pre-train Epoch: 4 [19200/40200 (48%)]	Loss: 0.755348	Acc: 78.05%
+Pre-train Epoch: 4 [25600/40200 (64%)]	Loss: 0.711139	Acc: 78.11%
+Pre-train Epoch: 4 [32000/40200 (79%)]	Loss: 0.639825	Acc: 77.99%
+Pre-train Epoch: 4 [38400/40200 (95%)]	Loss: 0.886712	Acc: 77.98%
+
+Validation set: Average loss: 0.7038, Accuracy: 15700/19800 (79.29%)
+
+--> Best validation loss improved. Saved model to models/raman_reference_model.pth
+Pre-train Epoch: 5 [0/40200 (0%)]	Loss: 0.632822	Acc: 82.81%
+Pre-train Epoch: 5 [6400/40200 (16%)]	Loss: 0.648849	Acc: 80.04%
+Pre-train Epoch: 5 [12800/40200 (32%)]	Loss: 0.662045	Acc: 79.18%
+Pre-train Epoch: 5 [19200/40200 (48%)]	Loss: 0.692450	Acc: 79.03%
+Pre-train Epoch: 5 [25600/40200 (64%)]	Loss: 0.572597	Acc: 79.00%
+Pre-train Epoch: 5 [32000/40200 (79%)]	Loss: 0.721596	Acc: 78.94%
+Pre-train Epoch: 5 [38400/40200 (95%)]	Loss: 0.819105	Acc: 79.04%
+
+Validation set: Average loss: 0.7067, Accuracy: 15723/19800 (79.41%)
+
+--> No improvement in validation loss. Patience: 1/10
+Pre-train Epoch: 6 [0/40200 (0%)]	Loss: 0.685877	Acc: 82.81%
+Pre-train Epoch: 6 [6400/40200 (16%)]	Loss: 0.758581	Acc: 79.52%
+Pre-train Epoch: 6 [12800/40200 (32%)]	Loss: 0.636074	Acc: 79.57%
+Pre-train Epoch: 6 [19200/40200 (48%)]	Loss: 0.781826	Acc: 79.58%
+Pre-train Epoch: 6 [25600/40200 (64%)]	Loss: 0.713217	Acc: 79.75%
+Pre-train Epoch: 6 [32000/40200 (79%)]	Loss: 0.889873	Acc: 79.77%
+Pre-train Epoch: 6 [38400/40200 (95%)]	Loss: 0.846528	Acc: 79.65%
+
+Validation set: Average loss: 0.7439, Accuracy: 15384/19800 (77.70%)
+
+--> No improvement in validation loss. Patience: 2/10
+Pre-train Epoch: 7 [0/40200 (0%)]	Loss: 0.718246	Acc: 79.69%
+Pre-train Epoch: 7 [6400/40200 (16%)]	Loss: 0.576112	Acc: 80.31%
+Pre-train Epoch: 7 [12800/40200 (32%)]	Loss: 0.667142	Acc: 79.64%
+Pre-train Epoch: 7 [19200/40200 (48%)]	Loss: 0.807134	Acc: 79.78%
+Pre-train Epoch: 7 [25600/40200 (64%)]	Loss: 0.661460	Acc: 79.72%
+Pre-train Epoch: 7 [32000/40200 (79%)]	Loss: 0.493255	Acc: 79.81%
+Pre-train Epoch: 7 [38400/40200 (95%)]	Loss: 0.612982	Acc: 79.85%
+
+Validation set: Average loss: 0.6879, Accuracy: 15714/19800 (79.36%)
+
+--> Best validation loss improved. Saved model to models/raman_reference_model.pth
+Pre-train Epoch: 8 [0/40200 (0%)]	Loss: 0.795954	Acc: 78.12%
+Pre-train Epoch: 8 [6400/40200 (16%)]	Loss: 0.708198	Acc: 79.50%
+Pre-train Epoch: 8 [12800/40200 (32%)]	Loss: 0.558087	Acc: 79.91%
+Pre-train Epoch: 8 [19200/40200 (48%)]	Loss: 0.779789	Acc: 80.14%
+Pre-train Epoch: 8 [25600/40200 (64%)]	Loss: 0.523262	Acc: 80.08%
+Pre-train Epoch: 8 [32000/40200 (79%)]	Loss: 0.867717	Acc: 79.90%
+Pre-train Epoch: 8 [38400/40200 (95%)]	Loss: 0.692281	Acc: 79.82%
+
+Validation set: Average loss: 0.6661, Accuracy: 15719/19800 (79.39%)
+
+--> Best validation loss improved. Saved model to models/raman_reference_model.pth
+Pre-train Epoch: 9 [0/40200 (0%)]	Loss: 0.644656	Acc: 75.00%
+Pre-train Epoch: 9 [6400/40200 (16%)]	Loss: 0.472763	Acc: 80.66%
+Pre-train Epoch: 9 [12800/40200 (32%)]	Loss: 0.620878	Acc: 80.74%
+Pre-train Epoch: 9 [19200/40200 (48%)]	Loss: 0.578147	Acc: 80.52%
+Pre-train Epoch: 9 [25600/40200 (64%)]	Loss: 0.536790	Acc: 80.61%
+Pre-train Epoch: 9 [32000/40200 (79%)]	Loss: 0.635169	Acc: 80.43%
+Pre-train Epoch: 9 [38400/40200 (95%)]	Loss: 0.683405	Acc: 80.35%
+
+Validation set: Average loss: 0.7479, Accuracy: 15005/19800 (75.78%)
+
+--> No improvement in validation loss. Patience: 1/10
+Pre-train Epoch: 10 [0/40200 (0%)]	Loss: 0.565090	Acc: 85.94%
+Pre-train Epoch: 10 [6400/40200 (16%)]	Loss: 0.693120	Acc: 80.82%
+Pre-train Epoch: 10 [12800/40200 (32%)]	Loss: 0.869246	Acc: 80.53%
+Pre-train Epoch: 10 [19200/40200 (48%)]	Loss: 0.504981	Acc: 80.67%
+Pre-train Epoch: 10 [25600/40200 (64%)]	Loss: 0.484301	Acc: 80.74%
+Pre-train Epoch: 10 [32000/40200 (79%)]	Loss: 0.675165	Acc: 80.69%
+Pre-train Epoch: 10 [38400/40200 (95%)]	Loss: 0.756346	Acc: 80.70%
+
+Validation set: Average loss: 0.6954, Accuracy: 15659/19800 (79.09%)
+
+--> No improvement in validation loss. Patience: 2/10
+Pre-train Epoch: 11 [0/40200 (0%)]	Loss: 0.637927	Acc: 84.38%
+Pre-train Epoch: 11 [6400/40200 (16%)]	Loss: 0.627450	Acc: 80.35%
+Pre-train Epoch: 11 [12800/40200 (32%)]	Loss: 0.635201	Acc: 80.66%
+Pre-train Epoch: 11 [19200/40200 (48%)]	Loss: 0.653382	Acc: 80.55%
+Pre-train Epoch: 11 [25600/40200 (64%)]	Loss: 0.728330	Acc: 80.70%
+Pre-train Epoch: 11 [32000/40200 (79%)]	Loss: 0.599491	Acc: 80.68%
+Pre-train Epoch: 11 [38400/40200 (95%)]	Loss: 0.739308	Acc: 80.60%
+
+Validation set: Average loss: 0.9201, Accuracy: 14151/19800 (71.47%)
+
+--> No improvement in validation loss. Patience: 3/10
+Pre-train Epoch: 12 [0/40200 (0%)]	Loss: 0.575246	Acc: 87.50%
+Pre-train Epoch: 12 [6400/40200 (16%)]	Loss: 0.449117	Acc: 80.94%
+Pre-train Epoch: 12 [12800/40200 (32%)]	Loss: 0.686306	Acc: 81.05%
+Pre-train Epoch: 12 [19200/40200 (48%)]	Loss: 0.658183	Acc: 80.78%
+Pre-train Epoch: 12 [25600/40200 (64%)]	Loss: 0.542698	Acc: 80.97%
+Pre-train Epoch: 12 [32000/40200 (79%)]	Loss: 0.729770	Acc: 80.79%
+Pre-train Epoch: 12 [38400/40200 (95%)]	Loss: 0.692162	Acc: 80.82%
+
+Validation set: Average loss: 0.7016, Accuracy: 15610/19800 (78.84%)
+
+--> No improvement in validation loss. Patience: 4/10
+Pre-train Epoch: 13 [0/40200 (0%)]	Loss: 0.684544	Acc: 76.56%
+Pre-train Epoch: 13 [6400/40200 (16%)]	Loss: 0.585748	Acc: 81.17%
+Pre-train Epoch: 13 [12800/40200 (32%)]	Loss: 0.777755	Acc: 81.22%
+Pre-train Epoch: 13 [19200/40200 (48%)]	Loss: 0.592869	Acc: 81.18%
+Pre-train Epoch: 13 [25600/40200 (64%)]	Loss: 0.747224	Acc: 80.82%
+Pre-train Epoch: 13 [32000/40200 (79%)]	Loss: 0.582641	Acc: 80.90%
+Pre-train Epoch: 13 [38400/40200 (95%)]	Loss: 0.424270	Acc: 80.80%
+
+Validation set: Average loss: 0.6756, Accuracy: 15652/19800 (79.05%)
+
+--> No improvement in validation loss. Patience: 5/10
+Pre-train Epoch: 14 [0/40200 (0%)]	Loss: 0.675460	Acc: 79.69%
+Pre-train Epoch: 14 [6400/40200 (16%)]	Loss: 0.707341	Acc: 80.82%
+Pre-train Epoch: 14 [12800/40200 (32%)]	Loss: 0.599930	Acc: 80.69%
+Pre-train Epoch: 14 [19200/40200 (48%)]	Loss: 0.760791	Acc: 80.65%
+Pre-train Epoch: 14 [25600/40200 (64%)]	Loss: 0.583480	Acc: 80.61%
+Pre-train Epoch: 14 [32000/40200 (79%)]	Loss: 0.570688	Acc: 80.82%
+Pre-train Epoch: 14 [38400/40200 (95%)]	Loss: 0.622710	Acc: 80.78%
+
+Validation set: Average loss: 0.7622, Accuracy: 14856/19800 (75.03%)
+
+--> No improvement in validation loss. Patience: 6/10
+Pre-train Epoch: 15 [0/40200 (0%)]	Loss: 0.495725	Acc: 89.06%
+Pre-train Epoch: 15 [6400/40200 (16%)]	Loss: 0.678629	Acc: 82.24%
+Pre-train Epoch: 15 [12800/40200 (32%)]	Loss: 0.646011	Acc: 81.86%
+Pre-train Epoch: 15 [19200/40200 (48%)]	Loss: 0.705563	Acc: 81.42%
+Pre-train Epoch: 15 [25600/40200 (64%)]	Loss: 0.838881	Acc: 81.21%
+Pre-train Epoch: 15 [32000/40200 (79%)]	Loss: 0.506369	Acc: 81.03%
+Pre-train Epoch: 15 [38400/40200 (95%)]	Loss: 0.698853	Acc: 81.02%
+
+Validation set: Average loss: 0.7669, Accuracy: 15076/19800 (76.14%)
+
+--> No improvement in validation loss. Patience: 7/10
+Pre-train Epoch: 16 [0/40200 (0%)]	Loss: 0.653332	Acc: 79.69%
+Pre-train Epoch: 16 [6400/40200 (16%)]	Loss: 0.590093	Acc: 80.97%
+Pre-train Epoch: 16 [12800/40200 (32%)]	Loss: 0.604787	Acc: 81.69%
+Pre-train Epoch: 16 [19200/40200 (48%)]	Loss: 0.893267	Acc: 81.64%
+Pre-train Epoch: 16 [25600/40200 (64%)]	Loss: 0.669303	Acc: 81.44%
+Pre-train Epoch: 16 [32000/40200 (79%)]	Loss: 0.407356	Acc: 81.18%
+Pre-train Epoch: 16 [38400/40200 (95%)]	Loss: 0.573580	Acc: 81.09%
+
+Validation set: Average loss: 0.7031, Accuracy: 15553/19800 (78.55%)
+
+--> No improvement in validation loss. Patience: 8/10
+Pre-train Epoch: 17 [0/40200 (0%)]	Loss: 0.608524	Acc: 82.81%
+Pre-train Epoch: 17 [6400/40200 (16%)]	Loss: 0.693664	Acc: 81.33%
+Pre-train Epoch: 17 [12800/40200 (32%)]	Loss: 0.543472	Acc: 81.02%
+Pre-train Epoch: 17 [19200/40200 (48%)]	Loss: 0.614358	Acc: 81.17%
+Pre-train Epoch: 17 [25600/40200 (64%)]	Loss: 0.529292	Acc: 81.28%
+Pre-train Epoch: 17 [32000/40200 (79%)]	Loss: 0.649381	Acc: 81.23%
+Pre-train Epoch: 17 [38400/40200 (95%)]	Loss: 0.757031	Acc: 81.12%
+
+Validation set: Average loss: 0.6387, Accuracy: 16095/19800 (81.29%)
+
+--> Best validation loss improved. Saved model to models/raman_reference_model.pth
+Pre-train Epoch: 18 [0/40200 (0%)]	Loss: 0.703927	Acc: 78.12%
+Pre-train Epoch: 18 [6400/40200 (16%)]	Loss: 0.565839	Acc: 80.99%
+Pre-train Epoch: 18 [12800/40200 (32%)]	Loss: 0.634292	Acc: 81.69%
+Pre-train Epoch: 18 [19200/40200 (48%)]	Loss: 0.534992	Acc: 81.61%
+Pre-train Epoch: 18 [25600/40200 (64%)]	Loss: 0.583105	Acc: 81.53%
+Pre-train Epoch: 18 [32000/40200 (79%)]	Loss: 0.575411	Acc: 81.50%
+Pre-train Epoch: 18 [38400/40200 (95%)]	Loss: 0.692671	Acc: 81.50%
+
+Validation set: Average loss: 0.6872, Accuracy: 15721/19800 (79.40%)
+
+--> No improvement in validation loss. Patience: 1/10
+Pre-train Epoch: 19 [0/40200 (0%)]	Loss: 0.670958	Acc: 79.69%
+Pre-train Epoch: 19 [6400/40200 (16%)]	Loss: 0.568709	Acc: 82.18%
+Pre-train Epoch: 19 [12800/40200 (32%)]	Loss: 0.625214	Acc: 81.83%
+Pre-train Epoch: 19 [19200/40200 (48%)]	Loss: 0.559556	Acc: 81.77%
+Pre-train Epoch: 19 [25600/40200 (64%)]	Loss: 0.729104	Acc: 81.71%
+Pre-train Epoch: 19 [32000/40200 (79%)]	Loss: 0.538036	Acc: 81.68%
+Pre-train Epoch: 19 [38400/40200 (95%)]	Loss: 0.759589	Acc: 81.44%
+
+Validation set: Average loss: 0.6547, Accuracy: 15853/19800 (80.07%)
+
+--> No improvement in validation loss. Patience: 2/10
+Pre-train Epoch: 20 [0/40200 (0%)]	Loss: 0.905834	Acc: 67.19%
+Pre-train Epoch: 20 [6400/40200 (16%)]	Loss: 0.530526	Acc: 82.32%
+Pre-train Epoch: 20 [12800/40200 (32%)]	Loss: 0.562088	Acc: 81.83%
+Pre-train Epoch: 20 [19200/40200 (48%)]	Loss: 0.548020	Acc: 81.90%
+Pre-train Epoch: 20 [25600/40200 (64%)]	Loss: 0.841074	Acc: 82.00%
+Pre-train Epoch: 20 [32000/40200 (79%)]	Loss: 0.628261	Acc: 81.80%
+Pre-train Epoch: 20 [38400/40200 (95%)]	Loss: 0.480988	Acc: 81.64%
+
+Validation set: Average loss: 0.6757, Accuracy: 15852/19800 (80.06%)
+
+--> No improvement in validation loss. Patience: 3/10
+Pre-train Epoch: 21 [0/40200 (0%)]	Loss: 0.690083	Acc: 79.69%
+Pre-train Epoch: 21 [6400/40200 (16%)]	Loss: 0.598264	Acc: 81.87%
+Pre-train Epoch: 21 [12800/40200 (32%)]	Loss: 0.768645	Acc: 81.45%
+Pre-train Epoch: 21 [19200/40200 (48%)]	Loss: 0.715257	Acc: 81.63%
+Pre-train Epoch: 21 [25600/40200 (64%)]	Loss: 0.587725	Acc: 81.50%
+Pre-train Epoch: 21 [32000/40200 (79%)]	Loss: 0.777490	Acc: 81.52%
+Pre-train Epoch: 21 [38400/40200 (95%)]	Loss: 0.633111	Acc: 81.53%
+
+Validation set: Average loss: 0.6772, Accuracy: 15798/19800 (79.79%)
+
+--> No improvement in validation loss. Patience: 4/10
+Pre-train Epoch: 22 [0/40200 (0%)]	Loss: 0.583702	Acc: 82.81%
+Pre-train Epoch: 22 [6400/40200 (16%)]	Loss: 0.771189	Acc: 82.22%
+Pre-train Epoch: 22 [12800/40200 (32%)]	Loss: 0.789677	Acc: 82.10%
+Pre-train Epoch: 22 [19200/40200 (48%)]	Loss: 0.654038	Acc: 82.25%
+Pre-train Epoch: 22 [25600/40200 (64%)]	Loss: 0.575034	Acc: 81.99%
+Pre-train Epoch: 22 [32000/40200 (79%)]	Loss: 0.495303	Acc: 81.88%
+Pre-train Epoch: 22 [38400/40200 (95%)]	Loss: 0.760076	Acc: 81.76%
+
+Validation set: Average loss: 0.6710, Accuracy: 15772/19800 (79.66%)
+
+--> No improvement in validation loss. Patience: 5/10
+Pre-train Epoch: 23 [0/40200 (0%)]	Loss: 0.550989	Acc: 87.50%
+Pre-train Epoch: 23 [6400/40200 (16%)]	Loss: 0.744591	Acc: 81.61%
+Pre-train Epoch: 23 [12800/40200 (32%)]	Loss: 0.661769	Acc: 81.91%
+Pre-train Epoch: 23 [19200/40200 (48%)]	Loss: 0.584367	Acc: 81.56%
+Pre-train Epoch: 23 [25600/40200 (64%)]	Loss: 0.608028	Acc: 81.61%
+Pre-train Epoch: 23 [32000/40200 (79%)]	Loss: 0.778275	Acc: 81.54%
+Pre-train Epoch: 23 [38400/40200 (95%)]	Loss: 0.597522	Acc: 81.44%
+
+Validation set: Average loss: 0.7672, Accuracy: 15029/19800 (75.90%)
+
+--> No improvement in validation loss. Patience: 6/10
+Pre-train Epoch: 24 [0/40200 (0%)]	Loss: 0.453639	Acc: 89.06%
+Pre-train Epoch: 24 [6400/40200 (16%)]	Loss: 0.688796	Acc: 81.39%
+Pre-train Epoch: 24 [12800/40200 (32%)]	Loss: 0.607415	Acc: 81.32%
+Pre-train Epoch: 24 [19200/40200 (48%)]	Loss: 0.637335	Acc: 81.25%
+Pre-train Epoch: 24 [25600/40200 (64%)]	Loss: 0.801354	Acc: 81.44%
+Pre-train Epoch: 24 [32000/40200 (79%)]	Loss: 0.681344	Acc: 81.43%
+Pre-train Epoch: 24 [38400/40200 (95%)]	Loss: 0.731663	Acc: 81.38%
+
+Validation set: Average loss: 0.7651, Accuracy: 14906/19800 (75.28%)
+
+--> No improvement in validation loss. Patience: 7/10
+Pre-train Epoch: 25 [0/40200 (0%)]	Loss: 0.632978	Acc: 79.69%
+Pre-train Epoch: 25 [6400/40200 (16%)]	Loss: 0.563553	Acc: 82.41%
+Pre-train Epoch: 25 [12800/40200 (32%)]	Loss: 0.841685	Acc: 81.81%
+Pre-train Epoch: 25 [19200/40200 (48%)]	Loss: 0.666453	Acc: 81.78%
+Pre-train Epoch: 25 [25600/40200 (64%)]	Loss: 0.573565	Acc: 81.63%
+Pre-train Epoch: 25 [32000/40200 (79%)]	Loss: 0.461516	Acc: 81.67%
+Pre-train Epoch: 25 [38400/40200 (95%)]	Loss: 0.592215	Acc: 81.71%
+
+Validation set: Average loss: 0.6749, Accuracy: 15786/19800 (79.73%)
+
+--> No improvement in validation loss. Patience: 8/10
+Pre-train Epoch: 26 [0/40200 (0%)]	Loss: 0.702197	Acc: 84.38%
+Pre-train Epoch: 26 [6400/40200 (16%)]	Loss: 0.589409	Acc: 82.29%
+Pre-train Epoch: 26 [12800/40200 (32%)]	Loss: 0.621324	Acc: 81.91%
+Pre-train Epoch: 26 [19200/40200 (48%)]	Loss: 0.873671	Acc: 81.84%
+Pre-train Epoch: 26 [25600/40200 (64%)]	Loss: 0.678978	Acc: 81.76%
+Pre-train Epoch: 26 [32000/40200 (79%)]	Loss: 0.742508	Acc: 81.61%
+Pre-train Epoch: 26 [38400/40200 (95%)]	Loss: 0.524849	Acc: 81.56%
+
+Validation set: Average loss: 0.6865, Accuracy: 15793/19800 (79.76%)
+
+--> No improvement in validation loss. Patience: 9/10
+Pre-train Epoch: 27 [0/40200 (0%)]	Loss: 0.720205	Acc: 79.69%
+Pre-train Epoch: 27 [6400/40200 (16%)]	Loss: 0.456290	Acc: 83.06%
+Pre-train Epoch: 27 [12800/40200 (32%)]	Loss: 0.577514	Acc: 82.67%
+Pre-train Epoch: 27 [19200/40200 (48%)]	Loss: 0.606095	Acc: 82.13%
+Pre-train Epoch: 27 [25600/40200 (64%)]	Loss: 0.613082	Acc: 81.92%
+Pre-train Epoch: 27 [32000/40200 (79%)]	Loss: 0.623401	Acc: 81.84%
+Pre-train Epoch: 27 [38400/40200 (95%)]	Loss: 0.741540	Acc: 81.79%
+
+Validation set: Average loss: 0.7559, Accuracy: 15139/19800 (76.46%)
+
+--> No improvement in validation loss. Patience: 10/10
+
+Early stopping triggered at epoch 27! Reverting to best model.
+Loaded best reference model for finetuning.
+
+Skipping finetuning (files not found or finetune-epochs=0).
+
+--- Evaluating on Test Set ---
+Applying RamanSPy preprocessing to data/X_test.npy...
+
+Test set: Average loss: 3.2026, Accuracy: 1001/3000 (33.37%)
+

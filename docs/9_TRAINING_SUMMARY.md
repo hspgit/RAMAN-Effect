@@ -44,6 +44,8 @@ The fine-tuned model was evaluated on the unseen test dataset (`X_test.npy`, 3,0
 * **Test Accuracy:** `67.83%` (2035 / 3000 correct)
 
 ## Conclusion & Next Steps
-The architectural upgrade to a 1D-ResNet massively improved the model's capacity, driving reference training accuracy to **89%**. Furthermore, fine-tuning enabled the model to reach **67.8% accuracy** on the test set, an absolute improvement of ~30% over the previous shallow CNN architecture.
+The architectural upgrade to a 1D-ResNet initially showed massive improvements, driving reference training accuracy to **89%** and reaching **67.8% accuracy** on the test set. 
 
-To close the domain gap further and push test accuracy above 80%, future training runs should consider increasing the fine-tuning epochs (e.g., `--finetune-epochs 15`), as the loss was still decreasing rapidly by Epoch 3.
+*Update*: However, subsequent extended testing revealed that the original Legacy CNN, when trained for 100 epochs, actually outperforms the ResNet, achieving **72.97% test accuracy**. This suggests the shallower architecture might be inherently better suited for this specific dataset without the need for extensive regularization.
+
+To close the domain gap further and push test accuracy above 80%, future work should investigate hybrid architectures or advanced augmentation techniques for the legacy model.

@@ -35,7 +35,7 @@ class LegacyCNN(nn.Module):
         self.bn6 = nn.BatchNorm1d(128)
         self.global_pool = nn.AdaptiveAvgPool1d(1) # Keras GlobalAveragePooling1D
         
-        self.dropout = nn.Dropout(0.1)
+        self.dropout = nn.Dropout(0.3)
         self.fc = nn.Linear(128, num_classes)
 
     def forward(self, x):

@@ -231,17 +231,17 @@ Architecture isn't everything. We implemented Weight Decay to keep the weights f
 
 ---
 
-# 7. Final Results: Defeating the Baseline
+# 7. Final Results: The Baseline Strikes Back
 
-By forcing the ResNet to learn general chemistry rather than noise, we achieved a massive victory.
+We initially thought ResNet was the ultimate winner. But when we trained the Legacy CNN for 100 epochs, the results shocked us.
 
 <v-click>
 
-| Metric | Legacy CNN | ResNet (10ep) | ResNet (50ep + Aug) | ResNet (100ep + Aug) |
-| :--- | :--- | :--- | :--- | :--- |
-| **Training Acc** | 79.28% | 80.41% | 82.46% | **88.44%** |
-| **Validation Acc** | 78.70% | 77.26% | 78.93% | **79.80%** |
-| **Test Acc** | 53.70% | 59.47% | 66.90% | **67.80%** |
+| Metric | Legacy CNN (Optimized) | ResNet (Optimized) | 1D Transformer |
+| :--- | :--- | :--- | :--- |
+| **Training Acc** | 83.37% | 78.68% | 60.63% |
+| **Validation Acc** | 82.54% | 77.61% | 66.69% |
+| **Test Acc** | **76.50%** | 69.90% | 54.73% |
 
 </v-click>
 
@@ -249,12 +249,12 @@ By forcing the ResNet to learn general chemistry rather than noise, we achieved 
 
 <br>
 
-> **The Ultimate Proof**: When finally evaluated on the completely unseen `X_test.npy` hold-out data, the augmented ResNet jumped to **67.80% Accuracy** (crushing the baseline's 53.70% score by +14.1%).
+> **The Plot Twist**: The simpler, shallower Legacy CNN achieved an all-time project high of **76.50% Accuracy**! The 1D Transformer completely underfitted the dataset, proving that without massive datasets or aggressive augmentation like MixUp, CNNs are still the king of spectral analysis.
 
 </v-click>
 
 <!--
-And the results speak for themselves. The bloated 99% training accuracy dropped to a healthy 82%. But our Validation Accuracy jumped to 78.93%, beating the baseline! But most importantly, when we ran the model on the completely unseen Final Test data, we saw a massive 14.1% improvement over the old model!
+And here is the biggest surprise of the project. We thought the ResNet was strictly better. But when we went back and trained the original Legacy CNN for 100 epochs to match, it completely shattered our expectations. We even gave the ResNet every advantage—40% dropout, data augmentation, and 20 epochs of finetuning—and it still only hit 69.9%. The Legacy CNN, given those same advantages, reached a massive 76.50% test accuracy. Even our brand new 1D Transformer completely failed to converge, underfitting severely. It turns out that for this specific dataset, a simpler CNN model combined with smart physics-aware regularization is the ultimate solution.
 -->
 
 ---

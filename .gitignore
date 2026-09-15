@@ -45,3 +45,4 @@ __pycache__/
 
 # Node / JS
 node_modules/
+docs-pdf/*
