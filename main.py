@@ -37,6 +37,9 @@ def main():
     parser.add_argument('--mixup-alpha', type=float, default=0.0,
                         help='alpha parameter for mixup augmentation (default: 0.0, i.e., disabled)')
     
+    parser.add_argument('--no-preprocessing', action='store_true',
+                        help='disable on-the-fly data preprocessing with ramanspy')
+    
     # Optional arguments to allow switching models dynamically in the future
     parser.add_argument('--model-type', type=str, default='resnet', choices=['resnet', 'legacy_cnn', 'transformer', 'multiscale_cnn', 'fusion'],
                         help='type of model to use')
@@ -60,7 +63,8 @@ def main():
     # 1. Load Reference Data
     print("Loading reference dataset...")
     full_ref_dataset = RamanDataset(os.path.join(args.data_dir, 'X_reference.npy'),
-                                    os.path.join(args.data_dir, 'y_reference.npy'))
+                                    os.path.join(args.data_dir, 'y_reference.npy'),
+                                    apply_preprocessing=not args.no_preprocessing)
     
     num_classes = len(np.unique(full_ref_dataset.y))
     print(f"Detected {num_classes} classes.")
@@ -147,7 +151,8 @@ def main():
     
     if os.path.exists(finetune_x) and os.path.exists(finetune_y) and args.finetune_epochs > 0:
         print("\n--- Starting Finetuning ---")
-        finetune_dataset = RamanDataset(finetune_x, finetune_y, label_mapping=full_ref_dataset.label_mapping)
+        finetune_dataset = RamanDataset(finetune_x, finetune_y, label_mapping=full_ref_dataset.label_mapping,
+                                        apply_preprocessing=not args.no_preprocessing)
         finetune_loader = DataLoader(finetune_dataset, batch_size=args.batch_size, shuffle=True)
         
         # Optionally reduce learning rate for finetuning
@@ -170,7 +175,8 @@ def main():
     
     if os.path.exists(test_x) and os.path.exists(test_y):
         print("\n--- Evaluating on Test Set ---")
-        test_dataset = RamanDataset(test_x, test_y, label_mapping=full_ref_dataset.label_mapping)
+        test_dataset = RamanDataset(test_x, test_y, label_mapping=full_ref_dataset.label_mapping,
+                                    apply_preprocessing=not args.no_preprocessing)
         test_loader = DataLoader(test_dataset, batch_size=args.batch_size * 2, shuffle=False)
         evaluate(model, device, test_loader, criterion, phase="Test")
     else:

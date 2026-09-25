@@ -29,10 +29,7 @@ class RamanDataset(Dataset):
                 wavenumbers = np.arange(self.X.shape[1])
                 
             pipeline = rp.preprocessing.Pipeline([
-                rp.preprocessing.despike.WhitakerHayes(),
-                rp.preprocessing.denoise.SavGol(window_length=9, polyorder=3),
-                rp.preprocessing.baseline.ASPLS(),
-                rp.preprocessing.normalise.MinMax()
+                rp.preprocessing.denoise.SavGol(window_length=9, polyorder=3)
             ])
             
             # ramanspy expects SpectralContainer or Spectrum objects
