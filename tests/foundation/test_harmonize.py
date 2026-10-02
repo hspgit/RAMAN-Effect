@@ -81,6 +81,25 @@ def test_despike_removes_cosmic_spike_and_keeps_real_band():
     np.testing.assert_allclose(out[250:350], clean[250:350])
 
 
+def test_despike_keeps_narrow_noisy_band():
+    rng = np.random.default_rng(0)
+    x = np.arange(400, 1800, 2.0)
+    c, f, h = 1000.3, 4.0, 5000.0
+    clean = 500 + h / (1 + ((x - c) / (f / 2)) ** 2)
+    y = rng.poisson(clean).astype(float)
+    assert np.abs(despike(y) - y).max() / (y.max() - y.min()) < 0.05
+
+
+def test_despike_removes_two_pixel_spike():
+    rng = np.random.default_rng(0)
+    x = np.arange(1000)
+    clean = gaussian(x, 300, 10) + rng.normal(0, 0.01, x.size)
+    spiky = clean.copy()
+    spiky[600:602] += 0.8
+    out = despike(spiky)
+    assert np.abs(out[600:602] - clean[600:602]).max() < 0.05
+
+
 def test_nan_and_inf_points_are_dropped_not_propagated():
     x = np.arange(400.0, 1800.0, 1.0)
     y = 1 + gaussian(x, 1000, 5)

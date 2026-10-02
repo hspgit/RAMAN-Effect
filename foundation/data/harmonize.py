@@ -6,9 +6,9 @@ points. No baseline correction, by design (spec section 4.3).
 from __future__ import annotations
 
 import numpy as np
-from scipy.ndimage import gaussian_filter1d
+from scipy.ndimage import gaussian_filter1d, median_filter
 
-HARMONIZE_VERSION = 1  # bump whenever output changes; part of every cache key
+HARMONIZE_VERSION = 2  # bump whenever output changes; part of every cache key
 
 GRID_START = 350.0
 GRID_STOP = 1850.0
@@ -41,29 +41,30 @@ def clean_axis(x, y):
     return x, y[first]
 
 
-def despike(y, threshold=8.0, window=3):
-    """Whitaker-Hayes cosmic-ray removal.
+def despike(y, threshold=8.0, window=7, max_width=2):
+    """Cosmic-ray removal.
 
-    A modified z-score of the first difference flags spikes; each flagged point
-    is replaced by the mean of the unflagged points within `window`.
+    A robust z-score of the residual from a running median flags positive
+    outliers; only runs of at most `max_width` consecutive flagged points are
+    spikes (cosmic rays are 1-2 pixels wide), and they are replaced by the
+    running median. Wider excursions are real bands and are left untouched.
     """
     y = np.asarray(y, dtype=np.float64)
-    if y.size < 3:
+    if y.size < window:
         return y.copy()
-    d = np.diff(y)
-    med = np.median(d)
-    mad = np.median(np.abs(d - med))
+    base = median_filter(y, size=window, mode="nearest")
+    r = y - base
+    med = np.median(r)
+    mad = np.median(np.abs(r - med))
     if mad == 0:
         return y.copy()
-    z = 0.6745 * (d - med) / mad
-    spikes = np.zeros(y.size, dtype=bool)
-    spikes[1:] = np.abs(z) > threshold
+    cand = (0.6745 * (r - med) / mad) > threshold
+    edges = np.diff(np.concatenate([[0], cand.astype(np.int8), [0]]))
+    starts, ends = np.flatnonzero(edges == 1), np.flatnonzero(edges == -1)
     out = y.copy()
-    for i in np.flatnonzero(spikes):
-        nb = np.arange(max(0, i - window), min(y.size, i + window + 1))
-        nb = nb[~spikes[nb]]
-        if nb.size:
-            out[i] = y[nb].mean()
+    for s, e in zip(starts, ends):
+        if e - s <= max_width:
+            out[s:e] = base[s:e]
     return out
 
 
