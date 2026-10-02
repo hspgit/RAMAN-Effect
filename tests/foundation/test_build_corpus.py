@@ -109,6 +109,18 @@ def test_planted_copy_of_our_data_is_removed(built):
     assert "planted" not in set(meta["sample_id"])
 
 
+def test_similarity_hist_counts_the_planted_copy(built):
+    manifest, _, _ = built
+    hist = manifest["sources"]["fake_cells"]["max_similarity_hist"]
+    assert set(hist) == {"0.99", "0.995", "0.999"}
+    assert hist["0.999"] >= 1
+
+
+def test_similarity_hist_bins():
+    h = bc.similarity_hist([0.5, 0.99, 0.994, 0.995, 0.9989, 0.999, 1.0])
+    assert h == {"0.99": 2, "0.995": 2, "0.999": 2}
+
+
 def test_flat_spectrum_is_dropped_and_duplicate_removed(built):
     manifest, _, meta = built
     src = manifest["sources"]["fake_min"]

@@ -77,6 +77,16 @@ def sampling_weights(source, split):
     return w / total if total > 0 else w
 
 
+SIM_BINS = (("0.99", 0.99, 0.995), ("0.995", 0.995, 0.999), ("0.999", 0.999, np.inf))
+
+
+def similarity_hist(scores):
+    """Counts of candidates by their best similarity to any Bacteria-ID
+    spectrum, in the near-miss bands below and at the leakage threshold."""
+    scores = np.asarray(scores)
+    return {k: int(((scores >= lo) & (scores < hi)).sum()) for k, lo, hi in SIM_BINS}
+
+
 def _git_sha():
     try:
         return subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
@@ -113,6 +123,7 @@ def build(cfg: dict) -> dict:
     our_X = np.concatenate([v[0] for v in ours.values()])
     our_M = np.concatenate([v[1] for v in ours.values()])
     guard = LeakageGuard(our_X, our_M, cos_threshold=cfg["leakage_cos_threshold"],
+                         corr_threshold=cfg.get("leakage_corr_threshold", 0.999),
                          device=device)
 
     S_parts, M_parts, meta_parts, stats = [], [], [], {}
@@ -121,7 +132,7 @@ def build(cfg: dict) -> dict:
         st = {"status": "ok", "domain": src.domain, "licence": src.licence, "url": src.url,
               "label_kind": src.probe_label_kind, "n_raw": 0, "n_unusable": 0,
               "n_leaked": 0, "n_capped": 0, "native_min": None, "native_max": None,
-              "lasers": set()}
+              "lasers": set(), "max_similarity_hist": {k: 0 for k, _, _ in SIM_BINS}}
         stats[src.name] = st
         try:
             src.download(raw_dir / src.name)
@@ -142,7 +153,10 @@ def build(cfg: dict) -> dict:
             keep = np.array([is_usable(s, m) for s, m in zip(S, M)], dtype=bool)
             st["n_unusable"] += int((~keep).sum())
             idx = np.flatnonzero(keep)
-            leaked = guard.find(S[idx], M[idx])
+            max_cos, max_corr = guard.scores(S[idx], M[idx])
+            leaked = guard.flag(S[idx], M[idx], max_cos, max_corr)
+            for k, v in similarity_hist(np.maximum(max_cos, max_corr)).items():
+                st["max_similarity_hist"][k] += v
             keep[idx[leaked]] = False
             st["n_leaked"] += int(leaked.sum())
             sample_id = np.asarray(batch.sample_id, dtype=object)
@@ -188,7 +202,9 @@ def build(cfg: dict) -> dict:
     drop = np.zeros(len(S), dtype=bool)
     if probe_rows.size and pre_rows.size:
         pguard = LeakageGuard(S[probe_rows].astype(np.float32), M[probe_rows],
-                              cos_threshold=cfg["leakage_cos_threshold"], device=device)
+                              cos_threshold=cfg["leakage_cos_threshold"],
+                              corr_threshold=cfg.get("leakage_corr_threshold", 0.999),
+                              device=device)
         drop[pre_rows[pguard.find(S[pre_rows], M[pre_rows])]] = True
     for name in stats:
         stats[name]["n_probe_isolation"] = int(((source == name) & drop).sum())
