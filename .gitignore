@@ -55,3 +55,4 @@ foundation/data/cache/
 foundation/data/corpus_*/*
 !foundation/data/corpus_*/manifest.json
 foundation/runs/
+foundation/.venv-raman-data/

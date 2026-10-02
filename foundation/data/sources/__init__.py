@@ -7,3 +7,4 @@ from . import airborne  # noqa: E402,F401
 from . import zenodo_guo  # noqa: E402,F401
 from . import mlrod  # noqa: E402,F401
 from . import deeper  # noqa: E402,F401
+from . import raman_data_export  # noqa: E402,F401

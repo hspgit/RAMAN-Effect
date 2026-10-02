@@ -1,0 +1,27 @@
+# raman_data datasets used as pretraining sources (spontaneous Raman only).
+# id: {domain, laser_nm}. Checked against raman_data @ c92289e descriptions.
+# Excluded on purpose: every SERS set, bacteria_identification (= our data),
+# pharmaceutical_ingredients (= api_flanagan), deepr_* and mlrod (own adapters),
+# rruff_* (own adapter), locust_phase_hemolymph (resonance Raman),
+# marine_pathogens* (no wavenumber axis), time-gated and synthetic-mix sets,
+# and Kaggle-only sets (need credentials).
+covid19_salvia: {domain: bio, laser_nm: 785}
+parkinson: {domain: bio, laser_nm: null}
+alzheimer: {domain: bio, laser_nm: null}
+wheat_lines: {domain: bio, laser_nm: 785}
+head_neck_cancer: {domain: bio, laser_nm: null}
+ecoli_fermentation: {domain: chem, laser_nm: 785}
+yeast_fermentation: {domain: chem, laser_nm: null}
+bioprocess_substrates: {domain: chem, laser_nm: null}
+kaiser_ecoli_fermentation: {domain: chem, laser_nm: null}
+kaiser_ecoli_fermentation_supernatant: {domain: chem, laser_nm: null}
+streptococcus_thermophilus_fermentation_kaiser: {domain: chem, laser_nm: null}
+bioprocess_analytes_anton_532: {domain: chem, laser_nm: 532}
+bioprocess_analytes_anton_785: {domain: chem, laser_nm: 785}
+bioprocess_analytes_kaiser: {domain: chem, laser_nm: null}
+bioprocess_analytes_metrohm: {domain: chem, laser_nm: null}
+bioprocess_analytes_mettler_toledo: {domain: chem, laser_nm: null}
+bioprocess_analytes_tec5: {domain: chem, laser_nm: null}
+bioprocess_analytes_tornado: {domain: chem, laser_nm: null}
+ecoli_metabolites_dig4bio: {domain: chem, laser_nm: null}
+bioprocess_analytes_ecoli_metabolites: {domain: chem, laser_nm: null}
