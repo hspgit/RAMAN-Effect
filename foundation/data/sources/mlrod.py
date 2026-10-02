@@ -68,13 +68,15 @@ def parse_header_axis(tokens):
 
 
 def parse_mlrod_csv(path):
-    with open(path, encoding="utf-8", errors="replace") as fh:
+    with open(path, encoding="utf-8-sig", errors="replace") as fh:
         header = fh.readline().strip().split(",")
     if header[0].strip() != "og-idx" or header[-1].strip() != "label":
         raise ValueError(f"{path}: unexpected header {header[0]!r}...{header[-1]!r}")
     axis = parse_header_axis(header[1:-1])
     df = pd.read_csv(path, header=None, skiprows=1)
     X = df.iloc[:, 1:-1].to_numpy(dtype=np.float64)
+    if X.shape[1] != axis.size:
+        raise ValueError(f"{path}: {X.shape[1]} intensity columns for {axis.size} wavenumbers")
     y = df.iloc[:, -1].astype(int).tolist()
     return axis, X, y
 
@@ -88,7 +90,13 @@ class MLROD:
 
     def download(self, raw_dir):
         for fname, url in FILES.items():
-            fetch(url, Path(raw_dir) / fname, retries=5)
+            dest = fetch(url, Path(raw_dir) / fname, retries=5)
+            # odr.io can answer HTTP 200 with an error body instead of the CSV
+            with open(dest, encoding="utf-8-sig", errors="replace") as fh:
+                ok = fh.readline().startswith("og-idx")
+            if not ok:
+                Path(dest).unlink()
+                raise IOError(f"{fname}: download is not an MLROD CSV (no 'og-idx' header)")
 
     def iter_batches(self, raw_dir):
         for fname in FILES:
