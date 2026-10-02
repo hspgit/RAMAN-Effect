@@ -347,3 +347,22 @@ def test_probe_isolation_accepts_clean_splits_and_lists_at_most_ten():
     with pytest.raises(RuntimeError) as e:
         bc.check_probe_isolation(source, sample, split)
     assert str(e.value).count("('a', 'g") == 10
+
+
+def test_rebuild_replaces_previous_corpus(tmp_path, monkeypatch):
+    our_S, our_M = harmonize_many(OUR_AXIS, _our_raw())
+    ours = {n: (our_S, our_M, np.zeros(len(our_S))) for n in
+            ("reference", "finetune", "test", "2018clinical", "2019clinical")}
+    monkeypatch.setattr(bc, "load_ours", lambda *a, **k: ours)
+    monkeypatch.setattr(bc, "REGISTRY", {"fake_min": LabelledMinerals(),
+                                         "fake_cells": UnlabelledCells()})
+    both = [{"name": "fake_min", "probe": True},
+            {"name": "fake_cells", "probe": False, "max_per_sample": 10}]
+    bc.build(_cfg(tmp_path, both))
+    out = tmp_path / "c2"
+    (out / "stale.txt").write_text("from the first build")
+    bc.build(_cfg(tmp_path, both[:1]))
+    meta = pd.read_parquet(out / "meta.parquet")
+    assert set(meta["source"]) == {"fake_min"}
+    assert not (out / "stale.txt").exists()
+    assert not (tmp_path / "c2.tmp").exists()

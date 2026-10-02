@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -270,13 +271,17 @@ def build(cfg: dict) -> dict:
         for s in ("pretrain", "probe_train", "probe_test"):
             st[f"n_{s}"] = int((rows & (split == s)).sum())
 
-    out_dir.mkdir(parents=True, exist_ok=True)
-    np.save(out_dir / "spectra.npy", S)
-    np.save(out_dir / "mask.npy", M)
-    meta.to_parquet(out_dir / "meta.parquet", index=False)
+    # write beside the target, then swap in, so a crash never leaves a half corpus
+    tmp = out_dir.with_name(out_dir.name + ".tmp")
+    if tmp.exists():
+        shutil.rmtree(tmp)
+    tmp.mkdir(parents=True)
+    np.save(tmp / "spectra.npy", S)
+    np.save(tmp / "mask.npy", M)
+    meta.to_parquet(tmp / "meta.parquet", index=False)
     splits = {s: np.flatnonzero(split == s).tolist()
               for s in ("pretrain", "probe_train", "probe_test")}
-    (out_dir / "splits.json").write_text(json.dumps(splits))
+    (tmp / "splits.json").write_text(json.dumps(splits))
     manifest = {
         "version": cfg["version"], "git_sha": _git_sha(),
         "harmonize_version": HARMONIZE_VERSION,
@@ -284,7 +289,10 @@ def build(cfg: dict) -> dict:
         "config": cfg, "sources": stats,
         "totals": {s: len(v) for s, v in splits.items()},
     }
-    (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2, default=str))
+    (tmp / "manifest.json").write_text(json.dumps(manifest, indent=2, default=str))
+    if out_dir.exists():
+        shutil.rmtree(out_dir)
+    tmp.rename(out_dir)
     return manifest
 
 
