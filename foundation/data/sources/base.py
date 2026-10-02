@@ -7,13 +7,14 @@ build_corpus can apply per-sample caps.
 from __future__ import annotations
 
 import hashlib
-import math
+import numbers
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator, Protocol, Sequence
 
 import numpy as np
+import pandas as pd
 import requests
 
 DOMAINS = ("bio", "mineral", "chem")
@@ -23,8 +24,13 @@ MAX_BATCH = 50_000
 def _norm_label(v):
     if v is None:
         return None
-    if isinstance(v, float) and math.isnan(v):
+    if pd.isna(v):
         return None
+    if isinstance(v, bytes):
+        v = v.decode(errors="replace")
+    elif isinstance(v, numbers.Real) and not isinstance(v, bool):
+        if v == int(v):
+            v = int(v)
     s = str(v).strip()
     return s or None
 
@@ -81,20 +87,35 @@ def fetch(url, dest, sha256=None, timeout=60, retries=3, backoff=2.0) -> Path:
     dest.parent.mkdir(parents=True, exist_ok=True)
     part = dest.with_name(dest.name + ".part")
     for attempt in range(1, retries + 1):
+        hasher = hashlib.sha256() if sha256 is not None else None
         try:
             with requests.get(url, stream=True, timeout=timeout) as r:
                 r.raise_for_status()
+                bytes_written = 0
                 with open(part, "wb") as fh:
                     for block in r.iter_content(chunk_size=1 << 20):
                         fh.write(block)
+                        if hasher is not None:
+                            hasher.update(block)
+                        bytes_written += len(block)
+                # Check for truncation based on Content-Length header
+                headers = getattr(r, "headers", {}) or {}
+                content_length = headers.get("Content-Length")
+                content_encoding = headers.get("Content-Encoding")
+                if content_length is not None and content_encoding is None:
+                    expected = int(content_length)
+                    if bytes_written != expected:
+                        part.unlink(missing_ok=True)
+                        raise IOError(f"truncated download for {url}: got {bytes_written}, "
+                                    f"expected {expected}")
             break
-        except (requests.RequestException, ConnectionError, TimeoutError):
+        except (requests.RequestException, ConnectionError, TimeoutError, IOError):
             part.unlink(missing_ok=True)
             if attempt == retries:
                 raise
             time.sleep(backoff * attempt)
     if sha256 is not None:
-        digest = hashlib.sha256(part.read_bytes()).hexdigest()
+        digest = hasher.hexdigest()
         if digest != sha256:
             part.unlink()
             raise IOError(f"checksum mismatch for {url}: got {digest}")

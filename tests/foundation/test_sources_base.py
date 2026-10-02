@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pytest
 
 from foundation.data.sources import base
@@ -21,8 +22,9 @@ def test_rawbatch_rejects_length_mismatch():
 
 
 class _FakeResponse:
-    def __init__(self, chunks, fail_after=None):
+    def __init__(self, chunks, fail_after=None, headers=None):
         self.chunks, self.fail_after = chunks, fail_after
+        self.headers = headers if headers is not None else {}
 
     def __enter__(self):
         return self
@@ -84,3 +86,24 @@ def test_transient_failure_is_retried(tmp_path, monkeypatch):
     monkeypatch.setattr(base.requests, "get", flaky)
     fetch("http://example.invalid/file.zip", dest, retries=3, backoff=0)
     assert dest.read_bytes() == b"aabb" and calls["n"] == 2
+
+
+def test_label_normalisation_handles_numpy_pandas_bytes_and_integral_floats():
+    from foundation.data.sources.base import _norm_label
+    assert _norm_label(np.float32('nan')) is None
+    assert _norm_label(pd.NA) is None
+    assert _norm_label(b'quartz') == 'quartz'
+    assert _norm_label(3.0) == '3'
+    assert _norm_label(np.int64(3)) == '3'
+    assert _norm_label(2.5) == '2.5'
+    assert _norm_label('  ') is None
+
+
+def test_short_read_against_content_length_is_rejected(tmp_path, monkeypatch):
+    dest = tmp_path / "file.zip"
+    monkeypatch.setattr(base.requests, "get",
+                        lambda *a, **k: _FakeResponse([b"aabb"], headers={"Content-Length": "10"}))
+    with pytest.raises(IOError, match="truncated"):
+        fetch("http://example.invalid/file.zip", dest, retries=1, backoff=0)
+    assert not dest.exists()
+    assert not (tmp_path / "file.zip.part").exists()
