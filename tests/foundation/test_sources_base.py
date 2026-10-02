@@ -107,3 +107,56 @@ def test_short_read_against_content_length_is_rejected(tmp_path, monkeypatch):
         fetch("http://example.invalid/file.zip", dest, retries=1, backoff=0)
     assert not dest.exists()
     assert not (tmp_path / "file.zip.part").exists()
+
+
+class _StatusResponse(_FakeResponse):
+    """A response with an HTTP status; raise_for_status behaves like requests'."""
+
+    def __init__(self, status, chunks=(b"ok",), headers=None):
+        super().__init__(list(chunks), headers=headers)
+        self.status_code = status
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise base.requests.HTTPError(f"{self.status_code} error", response=self)
+
+
+def test_throttled_request_waits_retry_after_then_succeeds(tmp_path, monkeypatch):
+    replies = [_StatusResponse(429, headers={"Retry-After": "7"}), _StatusResponse(200)]
+    monkeypatch.setattr(base.requests, "get", lambda *a, **k: replies.pop(0))
+    waits = []
+    monkeypatch.setattr(base.time, "sleep", waits.append)
+    fetch("http://example.invalid/f.txt", tmp_path / "f.txt", retries=1)
+    assert (tmp_path / "f.txt").read_bytes() == b"ok"
+    assert waits == [7.0]
+
+
+def test_throttle_without_retry_after_backs_off_exponentially(tmp_path, monkeypatch):
+    replies = [_StatusResponse(429), _StatusResponse(503), _StatusResponse(200)]
+    monkeypatch.setattr(base.requests, "get", lambda *a, **k: replies.pop(0))
+    waits = []
+    monkeypatch.setattr(base.time, "sleep", waits.append)
+    fetch("http://example.invalid/f.txt", tmp_path / "f.txt", retries=1, throttle_wait=30)
+    assert waits == [30, 60]
+
+
+def test_throttle_gives_up_after_throttle_retries(tmp_path, monkeypatch):
+    monkeypatch.setattr(base.requests, "get", lambda *a, **k: _StatusResponse(429))
+    monkeypatch.setattr(base.time, "sleep", lambda s: None)
+    with pytest.raises(base.requests.HTTPError):
+        fetch("http://example.invalid/f.txt", tmp_path / "f.txt", throttle_retries=3)
+    assert not (tmp_path / "f.txt").exists()
+
+
+def test_permanent_client_error_is_not_retried(tmp_path, monkeypatch):
+    calls = {"n": 0}
+
+    def not_found(*a, **k):
+        calls["n"] += 1
+        return _StatusResponse(404)
+
+    monkeypatch.setattr(base.requests, "get", not_found)
+    monkeypatch.setattr(base.time, "sleep", lambda s: None)
+    with pytest.raises(base.requests.HTTPError):
+        fetch("http://example.invalid/f.txt", tmp_path / "f.txt", retries=5)
+    assert calls["n"] == 1

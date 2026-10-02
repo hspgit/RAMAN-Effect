@@ -78,18 +78,45 @@ class ManualDownloadRequired(RuntimeError):
     """The source cannot be fetched automatically; the message says how to get it."""
 
 
-def fetch(url, dest, sha256=None, timeout=60, retries=3, backoff=2.0) -> Path:
-    """Download to `dest` via `dest.part`; rename only on success. Retries on
-    network errors (some hosts, e.g. rruff.net, drop connections)."""
+THROTTLE_STATUSES = (429, 503)
+
+
+def _retry_after(response):
+    value = (getattr(response, "headers", {}) or {}).get("Retry-After")
+    try:
+        return max(0.0, float(value))
+    except (TypeError, ValueError):
+        return None
+
+
+def fetch(url, dest, sha256=None, timeout=60, retries=3, backoff=2.0,
+          throttle_retries=8, throttle_wait=30.0, max_throttle_wait=600.0) -> Path:
+    """Download to `dest` via `dest.part`; rename only on success.
+
+    Network errors and 5xx replies are retried `retries` times (some hosts,
+    e.g. rruff.net, drop connections). A throttled reply (HTTP 429/503) waits
+    the server's Retry-After, or an exponential backoff from `throttle_wait`
+    seconds, up to `throttle_retries` times without using up `retries`
+    (scidb.cn throttles bursts). Other 4xx replies are permanent: no retry.
+    """
     dest = Path(dest)
     if dest.exists():
         return dest
     dest.parent.mkdir(parents=True, exist_ok=True)
     part = dest.with_name(dest.name + ".part")
-    for attempt in range(1, retries + 1):
+    attempt = throttled = 0
+    while True:
         hasher = hashlib.sha256() if sha256 is not None else None
         try:
             with requests.get(url, stream=True, timeout=timeout) as r:
+                if (getattr(r, "status_code", 200) in THROTTLE_STATUSES
+                        and throttled < throttle_retries):
+                    wait = _retry_after(r)
+                    if wait is None:
+                        wait = min(throttle_wait * 2 ** throttled, max_throttle_wait)
+                    throttled += 1
+                    time.sleep(wait)
+                    continue
                 r.raise_for_status()
                 bytes_written = 0
                 with open(part, "wb") as fh:
@@ -109,9 +136,17 @@ def fetch(url, dest, sha256=None, timeout=60, retries=3, backoff=2.0) -> Path:
                         raise IOError(f"truncated download for {url}: got {bytes_written}, "
                                     f"expected {expected}")
             break
+        except requests.HTTPError as e:
+            part.unlink(missing_ok=True)
+            status = getattr(e.response, "status_code", None)
+            attempt += 1
+            if (status is not None and 400 <= status < 500) or attempt >= retries:
+                raise
+            time.sleep(backoff * attempt)
         except (requests.RequestException, ConnectionError, TimeoutError, IOError):
             part.unlink(missing_ok=True)
-            if attempt == retries:
+            attempt += 1
+            if attempt >= retries:
                 raise
             time.sleep(backoff * attempt)
     if sha256 is not None:

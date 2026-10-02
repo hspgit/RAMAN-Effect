@@ -22,6 +22,10 @@ DATASET_ID = "5a1b7adb362d4064a3dedd01e5c40d90"
 LIST_URL = ("https://www.scidb.cn/api/sdb-filetree-service/getAllUrl"
             f"?dataSetId={DATASET_ID}&type=&version=V1&global=")
 SPECIES = ("A.baylyi", "E.coli", "P.aeruginosa", "S.aureus", "S.enterica")
+# scidb.cn returned HTTP 429 after ~600 files at 8 parallel connections; one
+# connection ran 300 files at ~0.46/s with no throttling. 3 stays well below
+# the limit, and fetch() backs off if the server still throttles.
+WORKERS = 3
 # 'path' may contain a raw '&' (e.g. 'Training_set_1&Test_set_1'), so a normal
 # query-string parser would cut it short. fileName is always the last parameter.
 _PATH_NAME = re.compile(r"[?&]path=(?P<path>.*)&fileName=(?P<name>[^&]*)$")
@@ -73,10 +77,23 @@ class Airborne:
         jobs = [(url, raw_dir / "files" / rel) for url, rel, _ in _kept(raw_dir)]
         todo = [(u, p) for u, p in jobs if not p.exists()]
         print(f"[airborne] {len(jobs)} files kept, {len(todo)} to download")
-        with ThreadPoolExecutor(max_workers=8) as pool:
-            for i, _ in enumerate(pool.map(lambda j: fetch(j[0], j[1], retries=5), todo), 1):
-                if i % 1000 == 0:
-                    print(f"[airborne] {i}/{len(todo)}")
+        failures = []
+
+        def get(job):
+            try:
+                fetch(job[0], job[1], retries=5)
+            except Exception as e:  # finish the rest first; report below
+                failures.append((job[1], e))
+
+        with ThreadPoolExecutor(max_workers=WORKERS) as pool:
+            for i, _ in enumerate(pool.map(get, todo), 1):
+                if i % 500 == 0:
+                    print(f"[airborne] {i}/{len(todo)}", flush=True)
+        if failures:
+            raise RuntimeError(
+                f"[airborne] {len(failures)} of {len(todo)} downloads failed "
+                f"(first: {failures[0][0].name}: {failures[0][1]}); "
+                "rerun to resume, finished files are kept")
 
     def iter_batches(self, raw_dir):
         axes, spectra, ids, labels = [], [], [], []

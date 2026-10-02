@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 
 from foundation.data.sources import REGISTRY
@@ -47,3 +48,27 @@ def test_iter_batches_reads_listed_files(tmp_path):
     assert batch.label == ["S.aureus", None]
     assert batch.sample_id[0] == "Test_set_3/Pathogen/S.aureus/5.txt"
     assert batch.axes[0].size == 225
+
+
+def test_download_finishes_other_files_before_reporting_failures(tmp_path, monkeypatch):
+    import foundation.data.sources.airborne as airborne
+
+    names = ["1.txt", "2.txt", "3.txt"]
+    urls = [f"https://download.scidb.cn/download?fileId={n}&path=/Test_set_3/Pathogen/E.coli"
+            f"&fileName={n}" for n in names]
+    (tmp_path / "urls.txt").write_text("\n".join(urls))
+
+    def fake_fetch(url, dest, **kw):
+        if url.endswith("fileName=2.txt"):
+            raise ConnectionError("gave up")
+        dest = __import__("pathlib").Path(dest)
+        if not dest.exists():               # urls.txt is already in place
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text("x")
+        return dest
+
+    monkeypatch.setattr(airborne, "fetch", fake_fetch)
+    with pytest.raises(RuntimeError, match="1 of 3"):
+        airborne.Airborne().download(tmp_path)
+    files = tmp_path / "files" / "Test_set_3" / "Pathogen" / "E.coli"
+    assert (files / "1.txt").exists() and (files / "3.txt").exists()
