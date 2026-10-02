@@ -34,7 +34,10 @@ def _labels_groups(zf, meta_name, n, default_group):
     with zf.open(meta_name) as fh:
         meta = pd.read_csv(fh)
     if len(meta) != n:
-        raise ValueError(f"{meta_name} has {len(meta)} rows for {n} spectra")
+        # plan D8: unlabelled beats a hard failure when the metadata is unusable
+        print(f"[zenodo] WARNING {meta_name} has {len(meta)} rows for {n} spectra; "
+              "treating the spectra as unlabelled")
+        return labels, groups
     if "labels" in meta:
         labels = meta["labels"].tolist()
     if "batches" in meta:

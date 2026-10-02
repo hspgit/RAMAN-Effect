@@ -34,10 +34,13 @@ def test_bacteria_without_metadata_is_unlabelled(tmp_path):
     assert labels == [None] * 4 and set(groups) == {"guo_bacteria"}
 
 
-def test_bacteria_metadata_row_mismatch_raises(tmp_path):
+def test_bacteria_metadata_row_mismatch_falls_back_to_unlabelled(tmp_path, capsys):
     _bacteria_zip(tmp_path / "Bacterial_data.zip", meta_rows=3)
-    with pytest.raises(ValueError, match="rows"):
-        read_bacteria(tmp_path / "Bacterial_data.zip")
+    _, X, labels, groups = read_bacteria(tmp_path / "Bacterial_data.zip")
+    assert X.shape[0] == 4
+    assert labels == [None] * 4 and groups == ["guo_bacteria"] * 4
+    out = capsys.readouterr().out
+    assert "meta_all.csv" in out and "3" in out and "4" in out
 
 
 def test_oil_and_registered_sources(tmp_path):
@@ -50,5 +53,9 @@ def test_oil_and_registered_sources(tmp_path):
     axis2, X, labels, groups = read_oil(tmp_path / "Oil_data.zip")
     assert axis2[0] == 353.0 and X.shape == (2, axis.size)
     assert labels == ["olive", "olive"] and groups == ["batch_0", "batch_1"]
+    with zipfile.ZipFile(tmp_path / "nometa.zip", "w") as zf:
+        zf.writestr("Oil_data/spec.csv", "1,2\n3,4\n")
+    with pytest.raises(ValueError, match="not found"):
+        read_oil(tmp_path / "nometa.zip")
     (batch,) = list(REGISTRY["zenodo_oil"].iter_batches(tmp_path))
     assert REGISTRY["zenodo_oil"].domain == "chem" and len(batch.label) == 2
