@@ -100,7 +100,7 @@ def test_artefacts_are_consistent(built):
     splits = json.loads((out / "splits.json").read_text())
     assert sum(len(v) for v in splits.values()) == len(meta)
     assert set(meta.columns) == {"source", "domain", "laser_nm", "sample_id",
-                                 "label", "split", "sample_weight"}
+                                 "label", "weight_group", "split", "sample_weight"}
 
 
 def test_planted_copy_of_our_data_is_removed(built):
@@ -159,10 +159,48 @@ def test_sampling_weights_follow_sqrt_n(built):
     pre = meta[meta["split"] == "pretrain"]
     assert meta.loc[meta["split"] != "pretrain", "sample_weight"].eq(0).all()
     assert pre["sample_weight"].sum() == pytest.approx(1.0)
-    totals = pre.groupby("source")["sample_weight"].sum()
-    counts = pre.groupby("source").size()
+    totals = pre.groupby("weight_group")["sample_weight"].sum()
+    counts = pre.groupby("weight_group").size()
     ratio = totals / np.sqrt(counts)
     assert ratio.max() == pytest.approx(ratio.min())
+
+
+class MoreCells:
+    """8 more unlabelled spectra, to share a weight group with UnlabelledCells."""
+    name, domain, licence, url, probe_label_kind = "fake_more", "bio", "?", "v", None
+
+    def download(self, raw_dir):
+        pass
+
+    def iter_batches(self, raw_dir):
+        rng = np.random.default_rng(7)
+        x = np.arange(500.0, 1800.0, 1.0)
+        yield RawBatch(axes=x, spectra=[0.2 + _g(x, 650 + 11 * i, 9) + rng.normal(0, 0.01, x.size)
+                                        for i in range(8)],
+                       sample_id=["more"] * 8, label=[None] * 8, laser_nm=532)
+
+
+def test_weight_group_pools_sources(tmp_path, monkeypatch):
+    our_S, our_M = harmonize_many(OUR_AXIS, _our_raw())
+    ours = {n: (our_S, our_M, np.zeros(len(our_S))) for n in
+            ("reference", "finetune", "test", "2018clinical", "2019clinical")}
+    monkeypatch.setattr(bc, "load_ours", lambda *a, **k: ours)
+    monkeypatch.setattr(bc, "REGISTRY", {"fake_min": LabelledMinerals(),
+                                         "fake_cells": UnlabelledCells(),
+                                         "fake_more": MoreCells()})
+    bc.build(_cfg(tmp_path, [
+        {"name": "fake_min", "probe": True},
+        {"name": "fake_cells", "probe": False, "max_per_sample": 10, "weight_group": "pool"},
+        {"name": "fake_more", "probe": False, "weight_group": "pool"}]))
+    meta = pd.read_parquet(tmp_path / "c2" / "meta.parquet")
+    pre = meta[meta["split"] == "pretrain"]
+    assert set(pre.loc[pre["source"].isin(["fake_cells", "fake_more"]), "weight_group"]) == {"pool"}
+    n_pool = pre["weight_group"].eq("pool").sum()
+    n_min = pre["weight_group"].eq("fake_min").sum()
+    assert n_pool > 8 and n_min > 0
+    w_pool = pre.loc[pre["weight_group"] == "pool", "sample_weight"].sum()
+    w_min = pre.loc[pre["weight_group"] == "fake_min", "sample_weight"].sum()
+    assert w_pool / w_min == pytest.approx(np.sqrt(n_pool / n_min))
 
 
 class NeedsManualDownload:

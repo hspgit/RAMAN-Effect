@@ -67,12 +67,14 @@ def assign_splits(source, label, sample_id, probe_sources, probe_fraction,
     return split
 
 
-def sampling_weights(source, split):
-    w = np.zeros(len(source), dtype=np.float64)
+def sampling_weights(weight_group, split):
+    """Pretrain sampling weights: each weight group (default: the source;
+    related sources can share one) gets total weight proportional to sqrt(n)."""
+    w = np.zeros(len(weight_group), dtype=np.float64)
     pre = split == "pretrain"
-    for src in np.unique(source[pre]):
-        rows = pre & (source == src)
-        w[rows] = rows.sum() ** -0.5            # per-source total = sqrt(n)
+    for grp in np.unique(weight_group[pre]):
+        rows = pre & (weight_group == grp)
+        w[rows] = rows.sum() ** -0.5            # per-group total = sqrt(n)
     total = w.sum()
     return w / total if total > 0 else w
 
@@ -153,6 +155,7 @@ def _ingest_source(src, entry, raw, guard, rng, st, S_parts, M_parts, meta_parts
             "source": src.name, "domain": src.domain,
             "laser_nm": batch.laser_nm[keep], "sample_id": sample_id[keep],
             "label": np.asarray(batch.label, dtype=object)[keep],
+            "weight_group": entry.get("weight_group", src.name),
         }))
 
 
@@ -231,7 +234,7 @@ def build(cfg: dict) -> dict:
     source = meta["source"].to_numpy(dtype=object)
 
     meta["split"] = split
-    meta["sample_weight"] = sampling_weights(source, split)
+    meta["sample_weight"] = sampling_weights(meta["weight_group"].to_numpy(dtype=object), split)
     for name, st in stats.items():
         rows = source == name
         st["lasers"] = sorted(st["lasers"])
