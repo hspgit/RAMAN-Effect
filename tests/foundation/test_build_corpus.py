@@ -366,3 +366,53 @@ def test_rebuild_replaces_previous_corpus(tmp_path, monkeypatch):
     assert set(meta["source"]) == {"fake_min"}
     assert not (out / "stale.txt").exists()
     assert not (tmp_path / "c2.tmp").exists()
+
+
+class MixedProbe:
+    """A probe source like airborne: species-labelled cells plus unlabelled
+    ('Others'/'unknown') cells in the same batch."""
+    name, domain, licence, url, probe_label_kind = "fake_mixed", "bio", "?", "m", "species"
+
+    def download(self, raw_dir):
+        pass
+
+    def iter_batches(self, raw_dir):
+        rng = np.random.default_rng(5)
+        x = np.arange(600.0, 1800.0, 5.0)
+        spectra, ids, labels = [], [], []
+        for cls, center in enumerate((800, 1100, 1500)):
+            for s in range(5):
+                spectra.append(0.1 + _g(x, center + rng.normal(0, 3), 8)
+                               + rng.normal(0, 0.02, x.size))
+                ids.append(f"m{cls}_{s}")
+                labels.append(f"species{cls}")
+        for u in range(4):
+            spectra.append(0.1 + _g(x, 650 + 40 * u, 8) + rng.normal(0, 0.02, x.size))
+            ids.append(f"u{u}")
+            labels.append(None)
+        yield RawBatch(axes=x, spectra=np.stack(spectra), sample_id=ids,
+                       label=labels, laser_nm=532)
+
+
+def test_probe_source_with_unlabelled_rows_builds(tmp_path, monkeypatch):
+    # pandas >= 3 stores a str/None label column as str dtype, so the missing
+    # labels come back as NaN floats; assign_splits must treat them as missing.
+    our_S, our_M = harmonize_many(OUR_AXIS, _our_raw())
+    ours = {n: (our_S, our_M, np.zeros(len(our_S))) for n in
+            ("reference", "finetune", "test", "2018clinical", "2019clinical")}
+    monkeypatch.setattr(bc, "load_ours", lambda *a, **k: ours)
+    monkeypatch.setattr(bc, "REGISTRY", {"fake_mixed": MixedProbe()})
+    bc.build(_cfg(tmp_path, [{"name": "fake_mixed", "probe": True}]))
+    meta = pd.read_parquet(tmp_path / "c2" / "meta.parquet")
+    unlabelled = meta[meta["label"].isna()]
+    assert len(unlabelled) == 4 and (unlabelled["split"] == "pretrain").all()
+    assert set(meta.loc[meta["split"] != "pretrain", "label"]) <= {"species0", "species1", "species2"}
+
+
+def test_assign_splits_treats_nan_label_as_missing():
+    source = np.array(["a"] * 7, dtype=object)
+    label = np.array(["x"] * 6 + [float("nan")], dtype=object)
+    sample = np.array([f"s{i}" for i in range(7)], dtype=object)
+    split = bc.assign_splits(source, label, sample, probe_sources={"a"}, probe_fraction=0.5,
+                             probe_test_fraction=0.5, min_class_spectra=2, seed=0)
+    assert split[6] == "pretrain"

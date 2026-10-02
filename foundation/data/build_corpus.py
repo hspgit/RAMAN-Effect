@@ -45,7 +45,9 @@ def assign_splits(source, label, sample_id, probe_sources, probe_fraction,
     fewer than 3 groups, or too few spectra, stay in pretrain."""
     split = np.full(len(source), "pretrain", dtype=object)
     rng = np.random.default_rng(seed)
-    labelled = np.array([v is not None for v in label], dtype=bool)
+    # pandas >= 3 reads a str/None label column back with NaN for the missing
+    # values, so test with isna rather than `is not None`.
+    labelled = ~pd.isna(np.asarray(label, dtype=object))
     for src in sorted(probe_sources):
         in_src = (source == src) & labelled
         for cls in sorted(set(label[in_src])):
