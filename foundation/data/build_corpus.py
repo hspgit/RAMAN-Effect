@@ -96,15 +96,28 @@ def _git_sha():
         return None
 
 
-def raw_fingerprint(directory):
-    """sha256 over (relative path, size) of every downloaded file, so a manifest
-    pins exactly which raw files built the corpus without hashing gigabytes."""
-    directory = Path(directory)
-    if not directory.exists():
-        return None
+def raw_fingerprint(paths_or_dir):
+    """sha256 over the content of the raw files that built a source (a
+    directory, or an explicit list of files), so a manifest pins exactly what
+    went in. Files are streamed in 1 MB chunks, in sorted relative-path order,
+    each preceded by its relative path. None if the input does not exist."""
+    if isinstance(paths_or_dir, (str, Path)):
+        root = Path(paths_or_dir)
+        if not root.exists():
+            return None
+        files = [(p.relative_to(root).as_posix(), p) for p in sorted(root.rglob("*"))
+                 if p.is_file()]
+    else:
+        files = [(Path(p).name, Path(p)) for p in paths_or_dir]
+        if not files or not all(p.is_file() for _, p in files):
+            return None
+        files.sort(key=lambda t: t[0])
     h = hashlib.sha256()
-    for p in sorted(q for q in directory.rglob("*") if q.is_file()):
-        h.update(f"{p.relative_to(directory).as_posix()}\t{p.stat().st_size}\n".encode())
+    for rel, p in files:
+        h.update(rel.encode() + b"\n")
+        with open(p, "rb") as fh:
+            while chunk := fh.read(1 << 20):
+                h.update(chunk)
     return h.hexdigest()
 
 
@@ -126,7 +139,9 @@ def _new_stats(src):
 def _ingest_source(src, entry, raw, guard, rng, st, S_parts, M_parts, meta_parts):
     """Harmonise one source, apply the leakage guard and per-sample cap, and
     append its kept rows to the part lists."""
-    st["raw_fingerprint"] = raw_fingerprint(raw)
+    # a source may keep its raw files outside its own directory
+    paths = src.fingerprint_paths(raw) if hasattr(src, "fingerprint_paths") else raw
+    st["raw_fingerprint"] = raw_fingerprint(paths)
     for batch in src.iter_batches(raw):
         S, M = harmonize_many(batch.axes, batch.spectra)
         lo, hi = _native_range(batch.axes)

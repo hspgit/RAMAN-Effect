@@ -45,3 +45,9 @@ def test_unlabelled_and_chunked(tmp_path, monkeypatch):
     assert [len(b.spectra) for b in batches] == [4, 4, 2]
     assert all(l is None for b in batches for l in b.label)
     assert np.isnan(batches[0].laser_nm).all()
+
+
+def test_fingerprint_paths_points_at_the_npz(tmp_path):
+    _npz(tmp_path, "x", 4)
+    src = RamanDataExport("x", "bio", 785)
+    assert src.fingerprint_paths(tmp_path / "rd_x") == [tmp_path / "raman_data" / "x.npz"]

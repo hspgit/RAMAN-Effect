@@ -297,6 +297,19 @@ def test_raw_fingerprint_changes_when_files_change(tmp_path):
     assert first == bc.raw_fingerprint(d)
     (d / "a.txt").write_text("12")
     assert bc.raw_fingerprint(d) != first
+    (d / "a.txt").write_text("1")
+    assert bc.raw_fingerprint(d) == first
+    (d / "a.txt").write_text("2")              # same size, different content
+    assert bc.raw_fingerprint(d) != first
+
+
+def test_raw_fingerprint_of_explicit_paths(tmp_path):
+    f = tmp_path / "x.npz"
+    assert bc.raw_fingerprint([f]) is None
+    f.write_bytes(b"abc")
+    first = bc.raw_fingerprint([f])
+    f.write_bytes(b"abd")
+    assert bc.raw_fingerprint([f]) != first
 
 
 def test_assign_splits_is_deterministic_and_skips_small_classes():

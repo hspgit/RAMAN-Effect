@@ -32,6 +32,9 @@ class RamanDataExport:
     def _file(self, raw_dir):
         return Path(raw_dir).parent / "raman_data" / f"{self.ds_id}.npz"
 
+    def fingerprint_paths(self, raw_dir):
+        return [self._file(raw_dir)]
+
     def download(self, raw_dir):
         if not self._file(raw_dir).exists():
             raise ManualDownloadRequired(
