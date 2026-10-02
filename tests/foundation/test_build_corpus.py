@@ -176,6 +176,22 @@ class NeedsManualDownload:
         raise AssertionError("must not be called")
 
 
+class CrashesMidway:
+    """One good batch, then a ValueError on the second."""
+    name, domain, licence, url, probe_label_kind = "crashy", "bio", "?", "w", None
+
+    def download(self, raw_dir):
+        pass
+
+    def iter_batches(self, raw_dir):
+        x = np.arange(500.0, 1800.0, 1.0)
+        rng = np.random.default_rng(4)
+        yield RawBatch(axes=x, spectra=[0.2 + _g(x, 900 + 9 * i, 8) + rng.normal(0, 0.01, x.size)
+                                        for i in range(6)],
+                       sample_id=["crash_a"] * 6, label=[None] * 6, laser_nm=785)
+        raise ValueError("boom")
+
+
 def _cfg(tmp_path, sources):
     return {"version": "t", "out_dir": str(tmp_path / "c2"), "raw_dir": str(tmp_path / "raw"),
             "cache_dir": str(tmp_path / "cache"), "our_data_dir": "unused", "seed": 0,
@@ -195,6 +211,32 @@ def test_optional_manual_source_is_skipped_and_recorded(tmp_path, monkeypatch):
         {"name": "manual_src", "probe": False, "optional": True}]))
     assert manifest["sources"]["manual_src"]["status"].startswith("skipped")
     assert manifest["sources"]["fake_min"]["status"] == "ok"
+
+
+def test_optional_source_that_crashes_is_dropped_cleanly(tmp_path, monkeypatch):
+    our_S, our_M = harmonize_many(OUR_AXIS, _our_raw())
+    ours = {n: (our_S, our_M, np.zeros(len(our_S))) for n in
+            ("reference", "finetune", "test", "2018clinical", "2019clinical")}
+    monkeypatch.setattr(bc, "load_ours", lambda *a, **k: ours)
+    monkeypatch.setattr(bc, "REGISTRY", {"fake_min": LabelledMinerals(),
+                                         "crashy": CrashesMidway()})
+    manifest = bc.build(_cfg(tmp_path, [
+        {"name": "crashy", "probe": False, "optional": True},
+        {"name": "fake_min", "probe": True}]))
+    assert manifest["sources"]["crashy"]["status"].startswith("failed: ValueError")
+    meta = pd.read_parquet(tmp_path / "c2" / "meta.parquet")
+    assert "crashy" not in set(meta["source"])
+    assert manifest["sources"]["fake_min"]["status"] == "ok"
+
+
+def test_required_source_that_crashes_fails_the_build(tmp_path, monkeypatch):
+    our_S, our_M = harmonize_many(OUR_AXIS, _our_raw())
+    ours = {n: (our_S, our_M, np.zeros(len(our_S))) for n in
+            ("reference", "finetune", "test", "2018clinical", "2019clinical")}
+    monkeypatch.setattr(bc, "load_ours", lambda *a, **k: ours)
+    monkeypatch.setattr(bc, "REGISTRY", {"crashy": CrashesMidway()})
+    with pytest.raises(ValueError, match="boom"):
+        bc.build(_cfg(tmp_path, [{"name": "crashy", "probe": False}]))
 
 
 def test_required_manual_source_fails_the_build(tmp_path, monkeypatch):

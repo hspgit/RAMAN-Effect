@@ -114,6 +114,48 @@ def _native_range(axes):
     return lo, hi
 
 
+def _new_stats(src):
+    return {"status": "ok", "domain": src.domain, "licence": src.licence, "url": src.url,
+            "label_kind": src.probe_label_kind, "n_raw": 0, "n_unusable": 0,
+            "n_leaked": 0, "n_capped": 0, "native_min": None, "native_max": None,
+            "lasers": set(), "max_similarity_hist": {k: 0 for k, _, _ in SIM_BINS}}
+
+
+def _ingest_source(src, entry, raw, guard, rng, st, S_parts, M_parts, meta_parts):
+    """Harmonise one source, apply the leakage guard and per-sample cap, and
+    append its kept rows to the part lists."""
+    st["raw_fingerprint"] = raw_fingerprint(raw)
+    for batch in src.iter_batches(raw):
+        S, M = harmonize_many(batch.axes, batch.spectra)
+        lo, hi = _native_range(batch.axes)
+        st["native_min"] = lo if st["native_min"] is None else min(lo, st["native_min"])
+        st["native_max"] = hi if st["native_max"] is None else max(hi, st["native_max"])
+        st["lasers"].update(float(v) for v in np.unique(batch.laser_nm) if np.isfinite(v))
+        st["n_raw"] += len(S)
+        keep = np.array([is_usable(s, m) for s, m in zip(S, M)], dtype=bool)
+        st["n_unusable"] += int((~keep).sum())
+        idx = np.flatnonzero(keep)
+        max_cos, max_corr = guard.scores(S[idx], M[idx])
+        leaked = guard.flag(S[idx], M[idx], max_cos, max_corr)
+        for k, v in similarity_hist(np.maximum(max_cos, max_corr)).items():
+            st["max_similarity_hist"][k] += v
+        keep[idx[leaked]] = False
+        st["n_leaked"] += int(leaked.sum())
+        sample_id = np.asarray(batch.sample_id, dtype=object)
+        if entry.get("max_per_sample"):
+            idx = np.flatnonzero(keep)
+            capped = cap_per_sample(sample_id[idx], entry["max_per_sample"], rng)
+            keep[idx[~capped]] = False
+            st["n_capped"] += int((~capped).sum())
+        S_parts.append(S[keep].astype(np.float16))
+        M_parts.append(M[keep])
+        meta_parts.append(pd.DataFrame({
+            "source": src.name, "domain": src.domain,
+            "laser_nm": batch.laser_nm[keep], "sample_id": sample_id[keep],
+            "label": np.asarray(batch.label, dtype=object)[keep],
+        }))
+
+
 def build(cfg: dict) -> dict:
     out_dir, raw_dir = Path(cfg["out_dir"]), Path(cfg["raw_dir"])
     rng = np.random.default_rng(cfg["seed"])
@@ -129,49 +171,26 @@ def build(cfg: dict) -> dict:
     S_parts, M_parts, meta_parts, stats = [], [], [], {}
     for entry in cfg["sources"]:
         src = REGISTRY[entry["name"]]
-        st = {"status": "ok", "domain": src.domain, "licence": src.licence, "url": src.url,
-              "label_kind": src.probe_label_kind, "n_raw": 0, "n_unusable": 0,
-              "n_leaked": 0, "n_capped": 0, "native_min": None, "native_max": None,
-              "lasers": set(), "max_similarity_hist": {k: 0 for k, _, _ in SIM_BINS}}
-        stats[src.name] = st
+        stats[src.name] = st = _new_stats(src)
+        n_parts = len(S_parts)
         try:
             src.download(raw_dir / src.name)
+            _ingest_source(src, entry, raw_dir / src.name, guard, rng, st,
+                           S_parts, M_parts, meta_parts)
         except ManualDownloadRequired as e:
             if not entry.get("optional"):
                 raise
             st["status"] = f"skipped: {e}"
             print(f"[corpus] {src.name}: {st['status']}")
-            continue
-        st["raw_fingerprint"] = raw_fingerprint(raw_dir / src.name)
-        for batch in src.iter_batches(raw_dir / src.name):
-            S, M = harmonize_many(batch.axes, batch.spectra)
-            lo, hi = _native_range(batch.axes)
-            st["native_min"] = lo if st["native_min"] is None else min(lo, st["native_min"])
-            st["native_max"] = hi if st["native_max"] is None else max(hi, st["native_max"])
-            st["lasers"].update(float(v) for v in np.unique(batch.laser_nm) if np.isfinite(v))
-            st["n_raw"] += len(S)
-            keep = np.array([is_usable(s, m) for s, m in zip(S, M)], dtype=bool)
-            st["n_unusable"] += int((~keep).sum())
-            idx = np.flatnonzero(keep)
-            max_cos, max_corr = guard.scores(S[idx], M[idx])
-            leaked = guard.flag(S[idx], M[idx], max_cos, max_corr)
-            for k, v in similarity_hist(np.maximum(max_cos, max_corr)).items():
-                st["max_similarity_hist"][k] += v
-            keep[idx[leaked]] = False
-            st["n_leaked"] += int(leaked.sum())
-            sample_id = np.asarray(batch.sample_id, dtype=object)
-            if entry.get("max_per_sample"):
-                idx = np.flatnonzero(keep)
-                capped = cap_per_sample(sample_id[idx], entry["max_per_sample"], rng)
-                keep[idx[~capped]] = False
-                st["n_capped"] += int((~capped).sum())
-            S_parts.append(S[keep].astype(np.float16))
-            M_parts.append(M[keep])
-            meta_parts.append(pd.DataFrame({
-                "source": src.name, "domain": src.domain,
-                "laser_nm": batch.laser_nm[keep], "sample_id": sample_id[keep],
-                "label": np.asarray(batch.label, dtype=object)[keep],
-            }))
+        except Exception as e:
+            if not entry.get("optional"):
+                raise
+            # drop everything this source already contributed, so a half-read
+            # source never reaches the corpus
+            del S_parts[n_parts:], M_parts[n_parts:], meta_parts[n_parts:]
+            stats[src.name] = st = _new_stats(src)
+            st["status"] = f"failed: {type(e).__name__}: {e}"
+            print(f"[corpus] {src.name}: {st['status']}")
 
     if not S_parts:
         raise RuntimeError("no source produced any spectra; nothing to build")
