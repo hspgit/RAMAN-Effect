@@ -89,6 +89,19 @@ def similarity_hist(scores):
     return {k: int(((scores >= lo) & (scores < hi)).sum()) for k, lo, hi in SIM_BINS}
 
 
+def check_probe_isolation(source, sample_id, split):
+    """No (source, sample_id) pair may sit in both pretrain and a probe split.
+    assign_splits works per class, so a sample id that carries two labels (or
+    a label and a null) could otherwise straddle."""
+    pairs = list(zip(source, sample_id))
+    pre = {p for p, sp in zip(pairs, split) if sp == "pretrain"}
+    probe = {p for p, sp in zip(pairs, split) if sp != "pretrain"}
+    both = sorted(pre & probe)
+    if both:
+        raise RuntimeError(f"{len(both)} (source, sample_id) pairs are in both pretrain and a "
+                           f"probe split, e.g. {both[:10]}")
+
+
 def _git_sha():
     try:
         return subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
@@ -248,6 +261,7 @@ def build(cfg: dict) -> dict:
     S, M, meta, split = S[~drop], M[~drop], meta[~drop].reset_index(drop=True), split[~drop]
     source = meta["source"].to_numpy(dtype=object)
 
+    check_probe_isolation(source, meta["sample_id"].to_numpy(dtype=object), split)
     meta["split"] = split
     meta["sample_weight"] = sampling_weights(meta["weight_group"].to_numpy(dtype=object), split)
     for name, st in stats.items():

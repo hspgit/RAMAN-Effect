@@ -323,3 +323,27 @@ def test_assign_splits_is_deterministic_and_skips_small_classes():
     assert (s1 == s2).all()
     assert (s1[12:] == "pretrain").all()            # class y has only 2 groups
     assert set(s1[:12]) == {"pretrain", "probe_train", "probe_test"}
+
+
+def test_probe_pretrain_straddle_is_rejected():
+    source = np.array(["a"] * 4 + ["b"] * 2, dtype=object)
+    sample = np.array(["g1", "g1", "g2", "g2", "g1", "g1"], dtype=object)
+    split = np.array(["probe_train", "pretrain", "pretrain", "pretrain",
+                      "pretrain", "pretrain"], dtype=object)
+    with pytest.raises(RuntimeError, match="a.*g1"):
+        bc.check_probe_isolation(source, sample, split)
+
+
+def test_probe_isolation_accepts_clean_splits_and_lists_at_most_ten():
+    source = np.array(["a"] * 4, dtype=object)
+    sample = np.array(["g1", "g1", "g2", "g2"], dtype=object)
+    bc.check_probe_isolation(source, sample,
+                             np.array(["probe_train", "probe_test", "pretrain", "pretrain"],
+                                      dtype=object))   # one group in both probe splits is fine here
+    n = 25
+    source = np.array(["a"] * (2 * n), dtype=object)
+    sample = np.array([f"g{i % n}" for i in range(2 * n)], dtype=object)
+    split = np.array(["probe_train"] * n + ["pretrain"] * n, dtype=object)
+    with pytest.raises(RuntimeError) as e:
+        bc.check_probe_isolation(source, sample, split)
+    assert str(e.value).count("('a', 'g") == 10
