@@ -48,3 +48,10 @@ node_modules/
 docs-pdf/*
 
 /venv
+
+# foundation experiment: raw downloads, built corpora, caches, runs
+foundation/data/raw/
+foundation/data/cache/
+foundation/data/corpus_*/*
+!foundation/data/corpus_*/manifest.json
+foundation/runs/
