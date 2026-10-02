@@ -2,7 +2,8 @@
 
 41 CSVs from odr.io. File list and integer->mineral map copied from the
 raman_data package (MIT, github.com/ml-lab-htw/raman_data @ c92289e,
-MiscLoader._load_mlrod). Layout: header 'og-idx,<wavenumbers...>,label', one
+MiscLoader._load_mlrod). Layout: header 'og-idx,<wavenumbers...>,label' (one
+file, L_raw_granite50dust_test_015s_10000.csv, leaves the id column unnamed), one
 row per spectrum; the axis differs per file; one header token is known to be
 malformed ('1630.89.1'), so tokens are parsed by their leading number.
 532 nm Horiba LabRAM HR Evolution, raw spectra. Group = file (one acquisition set).
@@ -67,10 +68,21 @@ def parse_header_axis(tokens):
     return np.array(vals)
 
 
-def parse_mlrod_csv(path):
+ID_HEADERS = ("og-idx", "")   # one file leaves the id column unnamed
+
+
+def _read_header(path):
     with open(path, encoding="utf-8-sig", errors="replace") as fh:
-        header = fh.readline().strip().split(",")
-    if header[0].strip() != "og-idx" or header[-1].strip() != "label":
+        return fh.readline().strip().split(",")
+
+
+def is_mlrod_header(tokens):
+    return len(tokens) > 2 and tokens[0].strip() in ID_HEADERS and tokens[-1].strip() == "label"
+
+
+def parse_mlrod_csv(path):
+    header = _read_header(path)
+    if not is_mlrod_header(header):
         raise ValueError(f"{path}: unexpected header {header[0]!r}...{header[-1]!r}")
     axis = parse_header_axis(header[1:-1])
     df = pd.read_csv(path, header=None, skiprows=1)
@@ -92,11 +104,10 @@ class MLROD:
         for fname, url in FILES.items():
             dest = fetch(url, Path(raw_dir) / fname, retries=5)
             # odr.io can answer HTTP 200 with an error body instead of the CSV
-            with open(dest, encoding="utf-8-sig", errors="replace") as fh:
-                ok = fh.readline().startswith("og-idx")
-            if not ok:
+            if not is_mlrod_header(_read_header(dest)):
                 Path(dest).unlink()
-                raise IOError(f"{fname}: download is not an MLROD CSV (no 'og-idx' header)")
+                raise IOError(f"{fname}: download is not an MLROD CSV "
+                              "(header is not '<id>,<wavenumbers...>,label')")
 
     def iter_batches(self, raw_dir):
         for fname in FILES:
