@@ -42,6 +42,7 @@ def test_parse_text_reads_header_and_rows_until_end():
 def test_parse_laser_handles_messy_values():
     assert parse_laser("632-8") == 632.0
     assert parse_laser("532nm") == 532.0
+    assert parse_laser("1064") == 1064.0
     assert parse_laser("", "785") == 785.0
     assert math.isnan(parse_laser("53", ""))
 

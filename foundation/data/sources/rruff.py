@@ -20,7 +20,7 @@ from .base import RawBatch, fetch, register
 
 BASE_URL = "https://www.rruff.net/zipped_data_files/raman/"
 ZIPS = ("excellent_unoriented.zip", "fair_unoriented.zip", "LR-Raman.zip")
-_LASER = re.compile(r"(\d{3})")
+_LASER = re.compile(r"(\d{3,4})")
 _SPLIT = re.compile(r"[,\s]+")
 
 
