@@ -10,6 +10,7 @@ Standalone on purpose: imports nothing from the foundation package.
 import argparse
 import json
 import os
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -70,6 +71,8 @@ def discard(ds_id, out):
 
 
 def main(argv=None):
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(errors="replace")   # Windows consoles choke on odd dataset names
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--whitelist", default="foundation/configs/raman_data_whitelist.yaml")
     ap.add_argument("--out", default="foundation/data/raw/raman_data")
