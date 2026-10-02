@@ -1,0 +1,39 @@
+version: corpus_v1
+out_dir: foundation/data/corpus_v1
+raw_dir: foundation/data/raw
+cache_dir: foundation/data/cache
+our_data_dir: data
+seed: 0
+device: cuda
+leakage_cos_threshold: 0.999
+probe_fraction: 0.15
+probe_test_fraction: 0.4
+min_probe_class_spectra: 5
+sources:
+  - {name: rruff, probe: true}
+  - {name: airborne, probe: true}
+  - {name: api_flanagan, probe: false}
+  - {name: mlrod, probe: false}
+  - {name: zenodo_bacteria, probe: false}
+  - {name: zenodo_oil, probe: false}
+  - {name: deeper, probe: false, optional: true}
+  - {name: rd_covid19_salvia, probe: false, optional: true}
+  - {name: rd_parkinson, probe: false, optional: true}
+  - {name: rd_alzheimer, probe: false, optional: true}
+  - {name: rd_wheat_lines, probe: false, optional: true}
+  - {name: rd_head_neck_cancer, probe: false, optional: true}
+  - {name: rd_ecoli_fermentation, probe: false, optional: true}
+  - {name: rd_yeast_fermentation, probe: false, optional: true}
+  - {name: rd_bioprocess_substrates, probe: false, optional: true}
+  - {name: rd_kaiser_ecoli_fermentation, probe: false, optional: true}
+  - {name: rd_kaiser_ecoli_fermentation_supernatant, probe: false, optional: true}
+  - {name: rd_streptococcus_thermophilus_fermentation_kaiser, probe: false, optional: true}
+  - {name: rd_bioprocess_analytes_anton_532, probe: false, optional: true}
+  - {name: rd_bioprocess_analytes_anton_785, probe: false, optional: true}
+  - {name: rd_bioprocess_analytes_kaiser, probe: false, optional: true}
+  - {name: rd_bioprocess_analytes_metrohm, probe: false, optional: true}
+  - {name: rd_bioprocess_analytes_mettler_toledo, probe: false, optional: true}
+  - {name: rd_bioprocess_analytes_tec5, probe: false, optional: true}
+  - {name: rd_bioprocess_analytes_tornado, probe: false, optional: true}
+  - {name: rd_ecoli_metabolites_dig4bio, probe: false, optional: true}
+  - {name: rd_bioprocess_analytes_ecoli_metabolites, probe: false, optional: true}
