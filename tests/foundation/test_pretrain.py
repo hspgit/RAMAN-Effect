@@ -305,3 +305,10 @@ def test_mae_forward_shapes_and_hidden_come_from_the_generator():
     pred, hidden, valid = out[0]
     assert pred.shape[:2] == hidden.shape == valid.shape == (2, 101)
     assert torch.equal(out[0][1], out[1][1])
+
+
+def test_resume_without_a_checkpoint_gives_a_clear_error(cfg, tmp_path):
+    empty = tmp_path / "empty_run"
+    empty.mkdir()
+    with pytest.raises(FileNotFoundError, match="no checkpoint.*restart"):
+        pt.run(cfg, run_dir=empty, resume=True, log=lambda s: None)

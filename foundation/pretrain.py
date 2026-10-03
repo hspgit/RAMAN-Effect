@@ -214,6 +214,11 @@ def _state(cfg, enc, dec, opt, scaler, sched, epoch, track, gens, device):
 
 
 def run(cfg, run_dir=None, resume=False, log=print):
+    if resume and not (Path(run_dir) / "ckpt_last.pt").exists():
+        raise FileNotFoundError(
+            f"no checkpoint exists yet in {run_dir}: checkpoints are written every "
+            f"probe_every={cfg['probe_every']} epochs, so this run never reached one and "
+            "must be restarted from scratch rather than resumed")
     device = torch.device(cfg["device"] if cfg["device"] != "cuda" or torch.cuda.is_available()
                           else "cpu")
     torch.manual_seed(cfg["seed"])
