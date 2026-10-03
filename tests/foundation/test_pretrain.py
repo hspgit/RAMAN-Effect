@@ -198,3 +198,61 @@ def test_best_checkpoint_holds_the_best_epoch_for_plan3(cfg, monkeypatch):
     # Verify encoder can be loaded
     enc = SpectralEncoder(PRESETS[ck_best["preset"]])
     enc.load_state_dict(ck_best["encoder"])  # Should not raise
+
+
+def test_resuming_a_finished_run_leaves_one_end_line(cfg):
+    # Run to completion (finishes normally with end line)
+    run_dir, _ = pt.run(cfg, log=lambda s: None)
+
+    # Resume to add more epochs
+    cfg_resume = pt.load_config(run_dir / "config.yaml", max_epochs=3)
+    pt.run(cfg_resume, run_dir=run_dir, resume=True, log=lambda s: None)
+
+    # Parse metrics
+    lines = (run_dir / "metrics.jsonl").read_text().splitlines()
+    records = [json.loads(l) for l in lines]
+
+    # Verify exactly one end line, and it's the last one
+    end_lines = [r for r in records if "end" in r]
+    assert len(end_lines) == 1
+    assert records[-1] == end_lines[0]
+
+    # Verify loss epochs are [1, 2, 3]
+    loss_epochs = [r["epoch"] for r in records if "loss" in r]
+    assert loss_epochs == [1, 2, 3]
+
+    # Verify probe epochs are [1, 2, 3]
+    probe_epochs = [r["epoch"] for r in records if "probe" in r]
+    assert probe_epochs == [1, 2, 3]
+
+
+def test_trim_metrics_drops_stale_probe_and_end_lines_and_bad_json(tmp_path):
+    # Create a metrics file with good lines, stale lines, end line, and bad JSON
+    metrics_file = tmp_path / "metrics.jsonl"
+    lines = [
+        json.dumps({"epoch": 1, "loss": 0.5}),  # Keep
+        json.dumps({"epoch": 1, "probe": {"probe_score": 0.6}, "improved": True}),  # Keep
+        json.dumps({"epoch": 2, "loss": 0.4}),  # Keep
+        json.dumps({"epoch": 2, "probe": {"probe_score": 0.7}, "improved": True}),  # Keep
+        json.dumps({"epoch": 3, "loss": 0.3}),  # Drop (stale)
+        json.dumps({"epoch": 3, "probe": {"probe_score": 0.65}, "improved": False}),  # Drop (stale)
+        json.dumps({"end": "finished 2/2", "track": {"best_epoch": 2}}),  # Drop (end line)
+        '{"epoch": 4, "lo',  # Drop (truncated/bad JSON)
+    ]
+    metrics_file.write_text("\n".join(lines), encoding="utf-8")
+
+    # Trim to last_epoch=2
+    pt._trim_metrics(metrics_file, 2)
+
+    # Verify result
+    result = metrics_file.read_text(encoding="utf-8").splitlines()
+    kept = [json.loads(l) for l in result if l]
+
+    # Should have exactly 4 records: epochs 1 and 2, loss and probe
+    assert len(kept) == 4
+    epochs = [r["epoch"] for r in kept]
+    assert epochs == [1, 1, 2, 2]
+
+    # Verify no end lines, no stale epochs, no bad JSON
+    assert all("end" not in r for r in kept)
+    assert all(r["epoch"] <= 2 for r in kept)

@@ -93,6 +93,29 @@ def _fmt_secs(s):
     return f"{h}h{m:02d}m" if h else f"{m}m{s % 60:02d}s"
 
 
+def _trim_metrics(path, last_epoch):
+    """Keep only records with epoch <= last_epoch; drop end lines and unparseable lines."""
+    path = Path(path)
+    if not path.exists():
+        return
+    kept = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line:
+            continue
+        try:
+            rec = json.loads(line)
+        except json.JSONDecodeError:
+            continue  # Skip truncated or malformed lines
+        if "end" in rec:
+            continue  # Skip end markers
+        if "epoch" in rec and isinstance(rec["epoch"], int) and rec["epoch"] <= last_epoch:
+            kept.append(line)
+    # Write atomically
+    tmp = Path(str(path) + ".tmp")
+    tmp.write_text("\n".join(kept) + ("\n" if kept else ""), encoding="utf-8")
+    os.replace(tmp, path)
+
+
 def lr_factor(step, warmup_steps, total_steps):
     if step < warmup_steps:
         return (step + 1) / max(1, warmup_steps)
@@ -201,12 +224,7 @@ def run(cfg, run_dir=None, resume=False, log=print):
         if device.type == "cuda" and "rng_cuda" in ck:
             torch.cuda.set_rng_state(ck["rng_cuda"])
         start, track = ck["epoch"] + 1, ck["track"]
-        # Filter metrics.jsonl to remove stale lines and end markers
-        metrics_path = Path(run_dir) / "metrics.jsonl"
-        lines = metrics_path.read_text(encoding="utf-8").splitlines()
-        filtered = [l for l in lines if l and (("epoch" in l and json.loads(l).get("epoch", 0) <= ck["epoch"])
-                                                 or ("epoch" in l and "probe" in l))]
-        metrics_path.write_text("\n".join(filtered) + ("\n" if filtered else ""), encoding="utf-8")
+        _trim_metrics(Path(run_dir) / "metrics.jsonl", ck["epoch"])
     else:
         stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
         run_dir = Path(cfg["run_root"]) / f"{stamp}_{cfg['preset']}_{cfg['tag']}"
