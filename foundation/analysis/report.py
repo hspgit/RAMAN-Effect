@@ -8,7 +8,7 @@ For each run, writes RUN_DIR/analysis/ with:
   embedding.png   2-D PCA of the best checkpoint's embeddings, by domain and by source
   summary.json
 Then prints one comparison table, the size recommendation (highest best probe
-score; a smaller preset wins ties within 0.01) and gate G1 for every run.
+score; a smaller preset wins ties within 0.03, about the probe's noise) and gate G1 for every run.
 """
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ from ..pretrain import Corpus  # noqa: E402
 from ..probe import build_probe_set, embed  # noqa: E402
 
 SIZE_ORDER = ["tiny", "small", "base"]
-TIE = 0.01
+TIE = 0.03   # about the probe's noise: few test spectra per task, one seed
 
 
 def read_metrics(run_dir):
@@ -202,17 +202,41 @@ def report_run(run_dir, corpus=None, device=None):
 
 
 def table(summaries):
+    tasks = sorted({t for s in summaries for t in (s["per_task"] or {})})
     head = ("| run | preset | params | epochs | hours | best epoch | probe | k-NN | logreg | "
-            "raw k-NN | G1 | RankMe | source-ID | end |")
-    rows = [head, "|" + "---|" * 14]
+            "raw k-NN | G1 | RankMe | source-ID | "
+            + "".join(f"{t} (kNN/LR) | " for t in tasks) + "end |")
+    rows = [head, "|" + "---|" * (14 + len(tasks))]
     f = lambda v, d=3: "-" if v is None else f"{v:.{d}f}"
+
+    def cell(s, t):
+        v = (s["per_task"] or {}).get(t)
+        return "-" if v is None else f"{v['knn_f1']:.2f}/{v['logreg_f1']:.2f}"
     for s in summaries:
         rows.append(f"| {s['run']} | {s['preset']} | {s['encoder_params'] / 1e6:.2f}M | "
                     f"{s['epochs_run']} | {s['hours']:.1f} | {s['best_epoch']} | "
                     f"{f(s['probe_score'])} | {f(s['knn_score'])} | {f(s['logreg_score'])} | "
                     f"{f(s['raw_knn_score'])} | {'PASS' if s['g1_pass'] else 'FAIL'} | "
-                    f"{f(s['rankme'], 1)} | {f(s['source_id_bacc'])} | {s['end']} |")
+                    f"{f(s['rankme'], 1)} | {f(s['source_id_bacc'])} | "
+                    + "".join(f"{cell(s, t)} | " for t in tasks) + f"{s['end']} |")
     return "\n".join(rows)
+
+
+def recommendation_text(summaries):
+    rec = recommend(summaries)
+    if rec is None:
+        return "No finished probe yet."
+    done = [s for s in summaries if s["probe_score"] is not None]
+    top = max(s["probe_score"] for s in done)
+    close = [s for s in done if s["probe_score"] >= top - TIE]
+    text = f"Recommended size: {rec['preset']} ({rec['run']})."
+    if len(close) > 1:
+        names = ", ".join(s["preset"] for s in sorted(close, key=lambda s: SIZE_ORDER.index(s["preset"])))
+        text += (f" {names} are statistically indistinguishable on the probe (within {TIE} of the "
+                 f"best score {top:.3f}), so the smaller one is recommended.")
+    else:
+        text += f" It leads the probe by more than {TIE}."
+    return text
 
 
 def main(argv=None):
@@ -226,9 +250,7 @@ def main(argv=None):
     corpus = None if args.no_embedding else Corpus(cfg["corpus_dir"])
     summaries = [report_run(r, corpus, device) for r in args.runs]
     text = table(summaries)
-    rec = recommend(summaries)
-    text += ("\n\nRecommended size (probe score only; smaller wins ties within "
-             f"{TIE}): {rec['preset']} ({rec['run']})" if rec else "\n\nNo finished probe yet.")
+    text += "\n\n" + recommendation_text(summaries)
     print(text)
     if args.out:
         Path(args.out).write_text(text + "\n")

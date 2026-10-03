@@ -58,8 +58,28 @@ def test_plot_recon_handles_an_old_npz_without_normalised_arrays(finished_run, t
 def test_recommend_prefers_smaller_preset_within_tie():
     mk = lambda preset, score: {"preset": preset, "probe_score": score, "run": preset}
     assert report.recommend([mk("tiny", 0.60), mk("small", 0.605), mk("base", 0.70)])["preset"] == "base"
-    assert report.recommend([mk("tiny", 0.60), mk("small", 0.605), mk("base", 0.609)])["preset"] == "tiny"
+    assert report.recommend([mk("tiny", 0.60), mk("small", 0.605), mk("base", 0.625)])["preset"] == "tiny"
     assert report.recommend([mk("small", None)]) is None
+
+
+def test_recommendation_text_flags_indistinguishable_presets():
+    mk = lambda preset, score: {"preset": preset, "probe_score": score, "run": f"r_{preset}"}
+    tie = report.recommendation_text([mk("tiny", 0.60), mk("small", 0.605), mk("base", 0.625)])
+    assert "indistinguishable" in tie and "smaller" in tie and "tiny (r_tiny)" in tie
+    clear = report.recommendation_text([mk("tiny", 0.60), mk("small", 0.605), mk("base", 0.70)])
+    assert "indistinguishable" not in clear and "base (r_base)" in clear
+    assert "No finished probe" in report.recommendation_text([mk("small", None)])
+
+
+def test_table_has_per_task_knn_and_logreg_columns(finished_run):
+    run_dir, _ = finished_run
+    s = report.summarize(run_dir)
+    text = report.table([s])
+    t = s["per_task"]["probe"]
+    assert "probe (kNN/LR)" in text
+    assert f"{t['knn_f1']:.2f}/{t['logreg_f1']:.2f}" in text
+    rows = text.splitlines()
+    assert len({r.count("|") for r in rows}) == 1
 
 
 def test_table_has_one_row_per_run(finished_run):
