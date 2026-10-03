@@ -20,14 +20,16 @@ class MaskedGroupNorm(nn.Module):
 
     def forward(self, h, m):
         B, C, N = h.shape
-        x = h.float().reshape(B, self.groups, C // self.groups, N)
-        mf = m.to(x.dtype)[:, None, None, :]                       # (B, 1, 1, N)
-        count = (mf.sum(dim=(2, 3), keepdim=True) * (C // self.groups)).clamp(min=1.0)
-        mean = (x * mf).sum(dim=(2, 3), keepdim=True) / count
-        var = (((x - mean) * mf) ** 2).sum(dim=(2, 3), keepdim=True) / count
-        y = ((x - mean) * torch.rsqrt(var + self.eps)).reshape(B, C, N)
-        y = y * self.weight.float()[None, :, None] + self.bias.float()[None, :, None]
-        return (y * m.to(y.dtype)[:, None, :]).to(h.dtype)
+        G = self.groups
+        xf = h.float().view(B, G, C // G, N)
+        mf = m.to(xf.dtype)[:, None, None, :]                      # (B, 1, 1, N)
+        cnt = (mf.sum(dim=(2, 3), keepdim=True) * (C // G)).clamp(min=1.0)
+        mean = (xf * mf).sum(dim=(2, 3), keepdim=True) / cnt
+        d = (xf - mean) * mf                                       # centred, zero where invalid
+        var = (d * d).sum(dim=(2, 3), keepdim=True) / cnt
+        out = (d * torch.rsqrt(var + self.eps)).view(B, C, N)
+        out = out * self.weight.float()[None, :, None] + self.bias.float()[None, :, None]
+        return (out * m.to(out.dtype)[:, None, :]).to(h.dtype)
 
 
 class Stem(nn.Module):

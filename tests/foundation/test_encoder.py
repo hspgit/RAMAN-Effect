@@ -3,6 +3,7 @@ import torch
 
 from foundation.model.encoder import (N_TOKENS, PRESETS, SpectralEncoder, count_parameters,
                                       patch_centres_cm, token_validity)
+from foundation.model.stem import MaskedGroupNorm, Stem
 
 
 def _batch(B=3, start=40, stop=900):
@@ -70,7 +71,6 @@ def test_embed_ignores_invalid_tokens():
 
 
 def test_masked_groupnorm_matches_groupnorm_when_all_valid():
-    from foundation.model.stem import MaskedGroupNorm
     h = torch.randn(2, 96, 50)
     m = torch.ones(2, 50, dtype=torch.bool)
     ref = torch.nn.GroupNorm(8, 96)(h)
@@ -78,7 +78,6 @@ def test_masked_groupnorm_matches_groupnorm_when_all_valid():
 
 
 def test_masked_groupnorm_ignores_invalid_positions():
-    from foundation.model.stem import MaskedGroupNorm
     norm = MaskedGroupNorm(8, 96)
     h = torch.randn(2, 96, 50)
     m = torch.ones(2, 50, dtype=torch.bool)
@@ -92,12 +91,33 @@ def test_masked_groupnorm_ignores_invalid_positions():
 
 
 def test_masked_groupnorm_all_invalid_gives_zeros():
-    from foundation.model.stem import MaskedGroupNorm
     out = MaskedGroupNorm(8, 96)(torch.randn(2, 96, 50), torch.zeros(2, 50, dtype=torch.bool))
     assert not torch.isnan(out).any() and (out == 0).all()
 
 
 def test_stem_state_dict_keys_unchanged():
-    from foundation.model.stem import Stem
     sd = Stem().state_dict()
     assert sd["norm.weight"].shape == (96,) and sd["norm.bias"].shape == (96,)
+
+
+def test_masked_groupnorm_statistics_match_groupnorm_on_the_valid_part():
+    h = torch.randn(3, 96, 60)
+    lengths = (25, 40, 60)
+    m = torch.zeros(3, 60, dtype=torch.bool)
+    for b, L in enumerate(lengths):
+        m[b, :L] = True
+    out = MaskedGroupNorm(8, 96)(h, m)
+    ref = torch.nn.GroupNorm(8, 96)
+    for b, L in enumerate(lengths):
+        assert torch.allclose(out[b, :, :L], ref(h[b:b + 1, :, :L])[0], atol=1e-5)
+        assert (out[b, :, L:] == 0).all()
+
+
+def test_masked_groupnorm_gradients_are_finite():
+    norm = MaskedGroupNorm(8, 96)
+    h = torch.randn(3, 96, 50).requires_grad_()
+    m = torch.ones(3, 50, dtype=torch.bool)
+    m[1, 25:] = False
+    m[2] = False                                  # all-invalid sample
+    norm(h, m).sum().backward()
+    assert all(torch.isfinite(g).all() for g in (h.grad, norm.weight.grad, norm.bias.grad))
