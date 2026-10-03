@@ -234,7 +234,7 @@ def recommendation_text(summaries):
         names = ", ".join(s["preset"] for s in sorted(close, key=lambda s: SIZE_ORDER.index(s["preset"])))
         text += (f" {names} are statistically indistinguishable on the probe (within {TIE} of the "
                  f"best score {top:.3f}), so the smaller one is recommended.")
-    else:
+    elif len(done) > 1:
         text += f" It leads the probe by more than {TIE}."
     return text
 

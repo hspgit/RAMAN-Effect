@@ -68,6 +68,7 @@ def test_recommendation_text_flags_indistinguishable_presets():
     assert "indistinguishable" in tie and "smaller" in tie and "tiny (r_tiny)" in tie
     clear = report.recommendation_text([mk("tiny", 0.60), mk("small", 0.605), mk("base", 0.70)])
     assert "indistinguishable" not in clear and "base (r_base)" in clear
+    assert "leads" not in report.recommendation_text([mk("small", 0.5)])
     assert "No finished probe" in report.recommendation_text([mk("small", None)])
 
 
