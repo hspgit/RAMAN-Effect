@@ -8,7 +8,7 @@ from __future__ import annotations
 import numpy as np
 from scipy.ndimage import gaussian_filter1d, median_filter
 
-HARMONIZE_VERSION = 2  # bump whenever output changes; part of every cache key
+HARMONIZE_VERSION = 3  # bump whenever output changes; part of every cache key
 
 GRID_START = 350.0
 GRID_STOP = 1850.0
@@ -41,18 +41,22 @@ def clean_axis(x, y):
     return x, y[first]
 
 
-def despike(y, threshold=8.0, window=7, max_width=2):
+def despike(y, threshold=8.0, window=7, max_width=2, bg_window=21, flank_ratio=0.25):
     """Cosmic-ray removal.
 
     A robust z-score of the residual from a running median flags positive
-    outliers; only runs of at most `max_width` consecutive flagged points are
-    spikes (cosmic rays are 1-2 pixels wide), and they are replaced by the
-    running median. Wider excursions are real bands and are left untouched.
+    outliers. A flagged run is a spike only if it is at most `max_width`
+    points wide (cosmic rays are 1-2 pixels) AND both neighbouring points sit
+    near the background (below `flank_ratio` of the run's height above a wider
+    running median). The flank test is what spares a sharp real band centred
+    between two pixels: only its 2 top pixels exceed the narrow median, but
+    its flanks are still high. Spikes are replaced by the running median.
     """
     y = np.asarray(y, dtype=np.float64)
     if y.size < window:
         return y.copy()
     base = median_filter(y, size=window, mode="nearest")
+    background = median_filter(y, size=bg_window, mode="nearest")
     r = y - base
     med = np.median(r)
     mad = np.median(np.abs(r - med))
@@ -61,9 +65,14 @@ def despike(y, threshold=8.0, window=7, max_width=2):
     cand = (0.6745 * (r - med) / mad) > threshold
     edges = np.diff(np.concatenate([[0], cand.astype(np.int8), [0]]))
     starts, ends = np.flatnonzero(edges == 1), np.flatnonzero(edges == -1)
+    above = y - background
     out = y.copy()
     for s, e in zip(starts, ends):
-        if e - s <= max_width:
+        if e - s > max_width:
+            continue
+        left = above[s - 1] if s > 0 else 0.0
+        right = above[e] if e < y.size else 0.0
+        if max(left, right) < flank_ratio * above[s:e].max():
             out[s:e] = base[s:e]
     return out
 

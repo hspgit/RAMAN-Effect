@@ -135,3 +135,31 @@ def test_harmonize_many_shared_axis_matches_per_spectrum_axes():
     assert S1.shape == (3, 1001) and S1.dtype == np.float32 and M1.dtype == bool
     np.testing.assert_array_equal(S1, S2)
     np.testing.assert_array_equal(M1, M2)
+
+
+def _band(x, center, fwhm, height, shape):
+    if shape == "lorentz":
+        return height / (1 + ((x - center) / (fwhm / 2)) ** 2)
+    return height * np.exp(-4 * np.log(2) * ((x - center) / fwhm) ** 2)
+
+
+@pytest.mark.parametrize("shape", ["lorentz", "gauss"])
+@pytest.mark.parametrize("fwhm", [3, 4, 5, 6, 8, 10])
+@pytest.mark.parametrize("offset", [0.0, 0.25, 0.5])
+def test_despike_keeps_sharp_band_at_any_subpixel_offset(shape, fwhm, offset):
+    # A band centred between two pixels leaves only its 2 top pixels above the
+    # running median, exactly like a cosmic ray; it must still be kept.
+    rng = np.random.default_rng(0)
+    x = np.arange(400.0, 1800.0, 1.0)
+    height = 5000.0
+    y = rng.poisson(500 + _band(x, 1000 + offset, fwhm, height, shape)).astype(float)
+    assert np.abs(despike(y) - y).max() / height < 0.05
+
+
+def test_despike_removes_spike_sitting_on_a_band():
+    rng = np.random.default_rng(0)
+    x = np.arange(1000)
+    clean = gaussian(x, 300, 10) + rng.normal(0, 0.01, x.size)
+    spiky = clean.copy()
+    spiky[300] += 1.0
+    assert abs(despike(spiky)[300] - clean[300]) < 0.05
