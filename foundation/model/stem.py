@@ -5,22 +5,47 @@ import torch
 import torch.nn as nn
 
 
+class MaskedGroupNorm(nn.Module):
+    """GroupNorm whose mean and (biased) variance are computed over valid points
+    only: per sample and group, over all channels of the group and the positions
+    where the mask is True. Invalid positions come out exactly 0. The affine
+    parameters are named `weight` and `bias`, like nn.GroupNorm's."""
+
+    def __init__(self, groups, channels, eps=1e-5):
+        super().__init__()
+        assert channels % groups == 0
+        self.groups, self.channels, self.eps = groups, channels, eps
+        self.weight = nn.Parameter(torch.ones(channels))
+        self.bias = nn.Parameter(torch.zeros(channels))
+
+    def forward(self, h, m):
+        B, C, N = h.shape
+        x = h.float().reshape(B, self.groups, C // self.groups, N)
+        mf = m.to(x.dtype)[:, None, None, :]                       # (B, 1, 1, N)
+        count = (mf.sum(dim=(2, 3), keepdim=True) * (C // self.groups)).clamp(min=1.0)
+        mean = (x * mf).sum(dim=(2, 3), keepdim=True) / count
+        var = (((x - mean) * mf) ** 2).sum(dim=(2, 3), keepdim=True) / count
+        y = ((x - mean) * torch.rsqrt(var + self.eps)).reshape(B, C, N)
+        y = y * self.weight.float()[None, :, None] + self.bias.float()[None, :, None]
+        return (y * m.to(y.dtype)[:, None, :]).to(h.dtype)
+
+
 class Stem(nn.Module):
     """Parallel 1D convolutions with kernels of 3, 9 and 25 points (~4.5, 13.5 and
-    37.5 cm^-1), `channels` each, concatenated, then GroupNorm and GELU. The input
-    has two channels, the spectrum (zeroed where invalid) and the validity mask,
-    so the stem knows which points are real."""
+    37.5 cm^-1), `channels` each, concatenated, then GroupNorm over valid points
+    only (masked), then GELU. The input has two channels, the spectrum (zeroed
+    where invalid) and the validity mask, so the stem knows which points are real."""
 
     def __init__(self, channels=32, kernels=(3, 9, 25), groups=8):
         super().__init__()
         self.convs = nn.ModuleList(
             nn.Conv1d(2, channels, k, padding=k // 2) for k in kernels)
         self.out_channels = channels * len(kernels)
-        self.norm = nn.GroupNorm(groups, self.out_channels)
+        self.norm = MaskedGroupNorm(groups, self.out_channels)
         self.act = nn.GELU()
 
     def forward(self, x, m):
         mf = m.to(x.dtype)
         inp = torch.stack([x * mf, mf], dim=1)                 # (B, 2, N)
         h = torch.cat([conv(inp) for conv in self.convs], dim=1)
-        return self.act(self.norm(h))                           # (B, C, N)
+        return self.act(self.norm(h, m))                        # (B, C, N)

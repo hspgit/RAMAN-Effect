@@ -67,3 +67,37 @@ def test_embed_ignores_invalid_tokens():
     x2 = x.clone()
     x2[0, 950:] = 5.0                             # invalid region (mask False)
     assert torch.allclose(e1, enc.embed(x2, m), atol=1e-6)
+
+
+def test_masked_groupnorm_matches_groupnorm_when_all_valid():
+    from foundation.model.stem import MaskedGroupNorm
+    h = torch.randn(2, 96, 50)
+    m = torch.ones(2, 50, dtype=torch.bool)
+    ref = torch.nn.GroupNorm(8, 96)(h)
+    assert torch.allclose(MaskedGroupNorm(8, 96)(h, m), ref, atol=1e-5)
+
+
+def test_masked_groupnorm_ignores_invalid_positions():
+    from foundation.model.stem import MaskedGroupNorm
+    norm = MaskedGroupNorm(8, 96)
+    h = torch.randn(2, 96, 50)
+    m = torch.ones(2, 50, dtype=torch.bool)
+    m[:, 25:] = False
+    a = norm(h, m)
+    h2 = h.clone()
+    h2[:, :, 25:] = 100 * torch.randn(2, 96, 25)
+    b = norm(h2, m)
+    assert torch.allclose(a[:, :, :25], b[:, :, :25], atol=1e-5)
+    assert (a[:, :, 25:] == 0).all() and (b[:, :, 25:] == 0).all()
+
+
+def test_masked_groupnorm_all_invalid_gives_zeros():
+    from foundation.model.stem import MaskedGroupNorm
+    out = MaskedGroupNorm(8, 96)(torch.randn(2, 96, 50), torch.zeros(2, 50, dtype=torch.bool))
+    assert not torch.isnan(out).any() and (out == 0).all()
+
+
+def test_stem_state_dict_keys_unchanged():
+    from foundation.model.stem import Stem
+    sd = Stem().state_dict()
+    assert sd["norm.weight"].shape == (96,) and sd["norm.bias"].shape == (96,)
