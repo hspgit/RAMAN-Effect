@@ -1,0 +1,29 @@
+# Adaptation of model A to our tasks (spec section 6). Read by
+# python -m foundation.adapt and python -m foundation.evaluate.
+a_ckpt: foundation/runs/pretrain/20261003-123546_small_main/ckpt_best.pt
+data_dir: data
+cache_dir: foundation/data/cache
+run_root: foundation/runs/adapt
+device: cuda
+amp: true
+batch_size: 256
+weight_decay: 0.05
+betas: [0.9, 0.999]
+lr_warmup_epochs: 1          # linear LR warm-up inside each stage, then cosine to max_epochs
+llrd: 0.75                   # layer-wise LR decay for full fine-tuning (S, B1)
+patience: 5                  # early stopping on validation loss
+head_warmup_epochs: 5        # B1: head only, once, at the start of the first stage
+head_warmup_lr_mult: 10.0    # B1 warm-up LR = 10 x the arm's LR
+max_epochs: {stage-i: 30, stage-ii: 50, single: 50}
+augment: mild                # shift +-2 cm^-1, scale 0.9-1.1, SNR 30-100, no masking
+lora_dropout: 0.05
+lr_grid:                     # 3 values per arm (spec 6.2); B2 is 10x B1 (spec 6.1)
+  S: [1.0e-4, 3.0e-4, 1.0e-3]
+  B1: [1.0e-4, 3.0e-4, 1.0e-3]
+  LP: [1.0e-3, 3.0e-3, 1.0e-2]
+  B2: [1.0e-3, 3.0e-3, 1.0e-2]
+sweep_seed: 1
+seeds: [1, 2, 3, 4, 5]
+curve_per_class: [5, 10, 25, 50]     # optional curve (spec 8.5); "all" = the 90-per-class runs
+curve_arms: [S, B1, B2]
+curve_seeds: [1, 2, 3]
