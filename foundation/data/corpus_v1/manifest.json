@@ -1,0 +1,885 @@
+{
+  "version": "corpus_v1",
+  "git_sha": "e2cc7f87db88fb0a3cf7d9df5069f91a6a6cb2fa",
+  "harmonize_version": 3,
+  "grid": {
+    "start": 350.0,
+    "stop": 1850.0,
+    "step": 1.5,
+    "n": 1001
+  },
+  "config": {
+    "version": "corpus_v1",
+    "out_dir": "foundation/data/corpus_v1",
+    "raw_dir": "foundation/data/raw",
+    "cache_dir": "foundation/data/cache",
+    "our_data_dir": "data",
+    "seed": 0,
+    "device": "cuda",
+    "leakage_cos_threshold": 0.999,
+    "probe_fraction": 0.15,
+    "probe_test_fraction": 0.4,
+    "min_probe_class_spectra": 5,
+    "sources": [
+      {
+        "name": "rruff",
+        "probe": true
+      },
+      {
+        "name": "airborne",
+        "probe": true
+      },
+      {
+        "name": "api_flanagan",
+        "probe": false
+      },
+      {
+        "name": "mlrod",
+        "probe": false
+      },
+      {
+        "name": "zenodo_bacteria",
+        "probe": false
+      },
+      {
+        "name": "zenodo_oil",
+        "probe": false
+      },
+      {
+        "name": "deeper",
+        "probe": false,
+        "optional": true
+      },
+      {
+        "name": "rd_covid19_salvia",
+        "probe": false,
+        "optional": true,
+        "weight_group": "raman_data"
+      },
+      {
+        "name": "rd_parkinson",
+        "probe": false,
+        "optional": true,
+        "weight_group": "raman_data"
+      },
+      {
+        "name": "rd_alzheimer",
+        "probe": false,
+        "optional": true,
+        "weight_group": "raman_data"
+      },
+      {
+        "name": "rd_wheat_lines",
+        "probe": false,
+        "optional": true,
+        "weight_group": "raman_data"
+      },
+      {
+        "name": "rd_head_neck_cancer",
+        "probe": false,
+        "optional": true,
+        "weight_group": "raman_data"
+      },
+      {
+        "name": "rd_ecoli_fermentation",
+        "probe": false,
+        "optional": true,
+        "weight_group": "raman_data"
+      },
+      {
+        "name": "rd_yeast_fermentation",
+        "probe": false,
+        "optional": true,
+        "weight_group": "raman_data"
+      },
+      {
+        "name": "rd_bioprocess_substrates",
+        "probe": false,
+        "optional": true,
+        "weight_group": "raman_data"
+      },
+      {
+        "name": "rd_kaiser_ecoli_fermentation",
+        "probe": false,
+        "optional": true,
+        "weight_group": "raman_data"
+      },
+      {
+        "name": "rd_kaiser_ecoli_fermentation_supernatant",
+        "probe": false,
+        "optional": true,
+        "weight_group": "raman_data"
+      },
+      {
+        "name": "rd_streptococcus_thermophilus_fermentation_kaiser",
+        "probe": false,
+        "optional": true,
+        "weight_group": "raman_data"
+      },
+      {
+        "name": "rd_bioprocess_analytes_anton_532",
+        "probe": false,
+        "optional": true,
+        "weight_group": "raman_data"
+      },
+      {
+        "name": "rd_bioprocess_analytes_anton_785",
+        "probe": false,
+        "optional": true,
+        "weight_group": "raman_data"
+      },
+      {
+        "name": "rd_bioprocess_analytes_kaiser",
+        "probe": false,
+        "optional": true,
+        "weight_group": "raman_data"
+      },
+      {
+        "name": "rd_bioprocess_analytes_metrohm",
+        "probe": false,
+        "optional": true,
+        "weight_group": "raman_data"
+      },
+      {
+        "name": "rd_bioprocess_analytes_mettler_toledo",
+        "probe": false,
+        "optional": true,
+        "weight_group": "raman_data"
+      },
+      {
+        "name": "rd_bioprocess_analytes_tec5",
+        "probe": false,
+        "optional": true,
+        "weight_group": "raman_data"
+      },
+      {
+        "name": "rd_bioprocess_analytes_tornado",
+        "probe": false,
+        "optional": true,
+        "weight_group": "raman_data"
+      },
+      {
+        "name": "rd_ecoli_metabolites_dig4bio",
+        "probe": false,
+        "optional": true,
+        "weight_group": "raman_data"
+      },
+      {
+        "name": "rd_bioprocess_analytes_ecoli_metabolites",
+        "probe": false,
+        "optional": true,
+        "weight_group": "raman_data"
+      }
+    ]
+  },
+  "sources": {
+    "rruff": {
+      "status": "ok",
+      "domain": "mineral",
+      "licence": "CC BY-SA 4.0 per FAIRsharing (RRUFF's own terms unclear); cite Lafuente et al. 2015",
+      "url": "https://www.rruff.net/zipped_data_files/raman/",
+      "label_kind": "mineral species",
+      "n_raw": 10921,
+      "n_unusable": 5,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": -20.53614,
+      "native_max": 4830.333,
+      "lasers": [
+        458.0,
+        488.0,
+        514.0,
+        515.0,
+        532.0,
+        632.0,
+        633.0,
+        638.0,
+        780.0,
+        785.0
+      ],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "f151b0d77e44394f3fdbc4afa338cd56873b84633cf36773150357ee113a0b80",
+      "n_duplicate": 52,
+      "n_probe_isolation": 310,
+      "n_pretrain": 8979,
+      "n_probe_train": 797,
+      "n_probe_test": 778
+    },
+    "airborne": {
+      "status": "ok",
+      "domain": "bio",
+      "licence": "CC BY-NC 4.0",
+      "url": "https://doi.org/10.57760/sciencedb.15628",
+      "label_kind": "pathogen species",
+      "n_raw": 11373,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 608.0,
+      "native_max": 1802.6666,
+      "lasers": [
+        532.0
+      ],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "f4ddd539eb5dbc98cb966405fc44f9ce4bcd44bdb4c6b1c74d96176b2827754b",
+      "n_duplicate": 1794,
+      "n_probe_isolation": 804,
+      "n_pretrain": 7866,
+      "n_probe_train": 545,
+      "n_probe_test": 364
+    },
+    "api_flanagan": {
+      "status": "ok",
+      "domain": "chem",
+      "licence": "CC BY 4.0",
+      "url": "https://doi.org/10.6084/m9.figshare.27931131",
+      "label_kind": "compound",
+      "n_raw": 3510,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 150.0,
+      "native_max": 3425.0,
+      "lasers": [
+        785.0
+      ],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "655bc08fcf0c39c9e0e101cf728a2feebb06e4642fd3a446dcdb7e67788d3615",
+      "n_duplicate": 5,
+      "n_probe_isolation": 0,
+      "n_pretrain": 3505,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "mlrod": {
+      "status": "ok",
+      "domain": "mineral",
+      "licence": "CC BY-NC",
+      "url": "https://doi.org/10.48484/PWRB-R137",
+      "label_kind": "mineral",
+      "n_raw": 130061,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 52.0656,
+      "native_max": 1800.99,
+      "lasers": [
+        532.0
+      ],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "5a861ec2cb88ea8db0f986eec0bb65545911caae7c5ba20f2bf0bfe111a996ed",
+      "n_duplicate": 0,
+      "n_probe_isolation": 58,
+      "n_pretrain": 130003,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "zenodo_bacteria": {
+      "status": "ok",
+      "domain": "bio",
+      "licence": "CC BY 4.0",
+      "url": "https://doi.org/10.5281/zenodo.15279321",
+      "label_kind": null,
+      "n_raw": 2710,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 400.0,
+      "native_max": 3150.0,
+      "lasers": [],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "dd59bc308c9cded9a7dfac904df229ba338db065dfcff56cf6fcb2cde7ec0d8e",
+      "n_duplicate": 0,
+      "n_probe_isolation": 0,
+      "n_pretrain": 2710,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "zenodo_oil": {
+      "status": "ok",
+      "domain": "chem",
+      "licence": "CC BY 4.0",
+      "url": "https://doi.org/10.5281/zenodo.15279321",
+      "label_kind": null,
+      "n_raw": 560,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 353.0,
+      "native_max": 3098.0,
+      "lasers": [],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "1f6b25dfcdccf3fc97ed9f897aa6e4adff9badb068fe0857e37e130131d3183b",
+      "n_duplicate": 0,
+      "n_probe_isolation": 0,
+      "n_pretrain": 560,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "deeper": {
+      "status": "ok",
+      "domain": "bio",
+      "licence": "code MIT; data licence not stated (research use)",
+      "url": "https://emckclac-my.sharepoint.com/:f:/g/personal/k1919691_kcl_ac_uk/EqZaY-_FrGdImybIGuMCvb8Bo_YD1Bc9ATBxbLxdDIv0RA?e=5%3aHhLp91&fromShare=true&at=9",
+      "label_kind": null,
+      "n_raw": 22000,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 498.265,
+      "native_max": 1799.9,
+      "lasers": [
+        532.0
+      ],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "f3b25e6b6ddd7829e6e4e89740ab5fd779c14ede5989869376790bbecb50cee5",
+      "n_duplicate": 0,
+      "n_probe_isolation": 0,
+      "n_pretrain": 22000,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "rd_covid19_salvia": {
+      "status": "ok",
+      "domain": "bio",
+      "licence": "per dataset; see raw/raman_data/export_report.json",
+      "url": "https://github.com/ml-lab-htw/raman_data",
+      "label_kind": null,
+      "n_raw": 2501,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 401.286,
+      "native_max": 1598.2219999999868,
+      "lasers": [
+        785.0
+      ],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "3f473f51a3b2101da59377fd9a3091e3ba3114394ccc4b33595d7b1988421f2e",
+      "n_duplicate": 0,
+      "n_probe_isolation": 0,
+      "n_pretrain": 2501,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "rd_parkinson": {
+      "status": "ok",
+      "domain": "bio",
+      "licence": "per dataset; see raw/raman_data/export_report.json",
+      "url": "https://github.com/ml-lab-htw/raman_data",
+      "label_kind": null,
+      "n_raw": 1476,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 401.286,
+      "native_max": 1598.2219999999868,
+      "lasers": [],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "752e15317c93a3cf9fae93224b2d8f67d4cf182278f45ce0a3ee7713a493cd7e",
+      "n_duplicate": 801,
+      "n_probe_isolation": 0,
+      "n_pretrain": 675,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "rd_alzheimer": {
+      "status": "ok",
+      "domain": "bio",
+      "licence": "per dataset; see raw/raman_data/export_report.json",
+      "url": "https://github.com/ml-lab-htw/raman_data",
+      "label_kind": null,
+      "n_raw": 1151,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 401.286,
+      "native_max": 1598.2219999999868,
+      "lasers": [],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "fd2ff34efdc823ae2bdd27e2eb2299b530e26c010dbeda8bc7c601b66101f817",
+      "n_duplicate": 876,
+      "n_probe_isolation": 0,
+      "n_pretrain": 275,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "rd_wheat_lines": {
+      "status": "ok",
+      "domain": "bio",
+      "licence": "per dataset; see raw/raman_data/export_report.json",
+      "url": "https://github.com/ml-lab-htw/raman_data",
+      "label_kind": null,
+      "n_raw": 53134,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 296.0,
+      "native_max": 2043.0,
+      "lasers": [
+        785.0
+      ],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "1de13beab6f7889e33b91583539b5349237b4bb2f33da9721f9e9bba6e236ebf",
+      "n_duplicate": 0,
+      "n_probe_isolation": 0,
+      "n_pretrain": 53134,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "rd_head_neck_cancer": {
+      "status": "ok",
+      "domain": "bio",
+      "licence": "per dataset; see raw/raman_data/export_report.json",
+      "url": "https://github.com/ml-lab-htw/raman_data",
+      "label_kind": null,
+      "n_raw": 111,
+      "n_unusable": 111,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 789.42,
+      "native_max": 909.7800000000045,
+      "lasers": [],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "8758a5a9047eb4bed17a57360c18bc33032d19721286172c133984601e5313d0",
+      "n_duplicate": 0,
+      "n_probe_isolation": 0,
+      "n_pretrain": 0,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "rd_ecoli_fermentation": {
+      "status": "ok",
+      "domain": "chem",
+      "licence": "per dataset; see raw/raman_data/export_report.json",
+      "url": "https://github.com/ml-lab-htw/raman_data",
+      "label_kind": null,
+      "n_raw": 379,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 390.63,
+      "native_max": 3384.7,
+      "lasers": [
+        785.0
+      ],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "3528f14a311f831ec89e9ee4ba7889dfb276c13b21e5fb1563109cb0dcd0ea25",
+      "n_duplicate": 0,
+      "n_probe_isolation": 0,
+      "n_pretrain": 379,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "rd_yeast_fermentation": {
+      "status": "ok",
+      "domain": "chem",
+      "licence": "per dataset; see raw/raman_data/export_report.json",
+      "url": "https://github.com/ml-lab-htw/raman_data",
+      "label_kind": null,
+      "n_raw": 58,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 401.0,
+      "native_max": 2300.0,
+      "lasers": [],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "f2b9aeb784ca712ba2dc6d0441e89e8fa71694a217a6a9b520462ae6eeab8183",
+      "n_duplicate": 0,
+      "n_probe_isolation": 0,
+      "n_pretrain": 58,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "rd_bioprocess_substrates": {
+      "status": "ok",
+      "domain": "chem",
+      "licence": "per dataset; see raw/raman_data/export_report.json",
+      "url": "https://github.com/ml-lab-htw/raman_data",
+      "label_kind": null,
+      "n_raw": 6960,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 390.63,
+      "native_max": 3384.7,
+      "lasers": [],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "1900579f38b5154a296073bc05404aadcdb649fcee959fab146f4916c401af50",
+      "n_duplicate": 0,
+      "n_probe_isolation": 0,
+      "n_pretrain": 6960,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "rd_kaiser_ecoli_fermentation": {
+      "status": "ok",
+      "domain": "chem",
+      "licence": "per dataset; see raw/raman_data/export_report.json",
+      "url": "https://github.com/ml-lab-htw/raman_data",
+      "label_kind": null,
+      "n_raw": 14,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 301.0,
+      "native_max": 1999.0,
+      "lasers": [],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "f5913575fcac3444010e90a028d7e96b3ca842d6b81e9ceacf9bb5f45cde386b",
+      "n_duplicate": 0,
+      "n_probe_isolation": 0,
+      "n_pretrain": 14,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "rd_kaiser_ecoli_fermentation_supernatant": {
+      "status": "ok",
+      "domain": "chem",
+      "licence": "per dataset; see raw/raman_data/export_report.json",
+      "url": "https://github.com/ml-lab-htw/raman_data",
+      "label_kind": null,
+      "n_raw": 14,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 301.0,
+      "native_max": 1999.0,
+      "lasers": [],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "9971f1076ceb72a10086bcc5b4d19753ed8fb741fa69f5e68f924f61c291a442",
+      "n_duplicate": 0,
+      "n_probe_isolation": 0,
+      "n_pretrain": 14,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "rd_streptococcus_thermophilus_fermentation_kaiser": {
+      "status": "ok",
+      "domain": "chem",
+      "licence": "per dataset; see raw/raman_data/export_report.json",
+      "url": "https://github.com/ml-lab-htw/raman_data",
+      "label_kind": null,
+      "n_raw": 14,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 300.0,
+      "native_max": 1800.0,
+      "lasers": [],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "1ef59a1fc3c854b9733855f0b11fb484a9800bc9d499efe969967366ef2cbd1e",
+      "n_duplicate": 0,
+      "n_probe_isolation": 0,
+      "n_pretrain": 14,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "rd_bioprocess_analytes_anton_532": {
+      "status": "ok",
+      "domain": "chem",
+      "licence": "per dataset; see raw/raman_data/export_report.json",
+      "url": "https://github.com/ml-lab-htw/raman_data",
+      "label_kind": null,
+      "n_raw": 270,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 300.0,
+      "native_max": 3500.0,
+      "lasers": [
+        532.0
+      ],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "8f0b51fa393d09aaf24dad85c467bd772a7c9636f337223e2b6562672d5f7be7",
+      "n_duplicate": 0,
+      "n_probe_isolation": 0,
+      "n_pretrain": 270,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "rd_bioprocess_analytes_anton_785": {
+      "status": "ok",
+      "domain": "chem",
+      "licence": "per dataset; see raw/raman_data/export_report.json",
+      "url": "https://github.com/ml-lab-htw/raman_data",
+      "label_kind": null,
+      "n_raw": 270,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 300.0,
+      "native_max": 2300.0,
+      "lasers": [
+        785.0
+      ],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "b10435b4c656f2a0c76dc401bdc5a2006182f7b69196fd66a20f60ba5f3590a2",
+      "n_duplicate": 0,
+      "n_probe_isolation": 0,
+      "n_pretrain": 270,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "rd_bioprocess_analytes_kaiser": {
+      "status": "ok",
+      "domain": "chem",
+      "licence": "per dataset; see raw/raman_data/export_report.json",
+      "url": "https://github.com/ml-lab-htw/raman_data",
+      "label_kind": null,
+      "n_raw": 134,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 300.0,
+      "native_max": 1941.3,
+      "lasers": [],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "9851530c79258cc10abeb736be16e4f477f18876347a452046bfecf37f0d0740",
+      "n_duplicate": 3,
+      "n_probe_isolation": 0,
+      "n_pretrain": 131,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "rd_bioprocess_analytes_metrohm": {
+      "status": "ok",
+      "domain": "chem",
+      "licence": "per dataset; see raw/raman_data/export_report.json",
+      "url": "https://github.com/ml-lab-htw/raman_data",
+      "label_kind": null,
+      "n_raw": 399,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 300.87,
+      "native_max": 3349.39,
+      "lasers": [],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "1ae120ac757feb6b2ce96efab50b0d719c63249b6c9be17cf23ca066778ed5d4",
+      "n_duplicate": 0,
+      "n_probe_isolation": 0,
+      "n_pretrain": 399,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "rd_bioprocess_analytes_mettler_toledo": {
+      "status": "ok",
+      "domain": "chem",
+      "licence": "per dataset; see raw/raman_data/export_report.json",
+      "url": "https://github.com/ml-lab-htw/raman_data",
+      "label_kind": null,
+      "n_raw": 275,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 300.0,
+      "native_max": 3200.0,
+      "lasers": [],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "efe25f101248d6be9d50be8349fe247f7c4a2ba7967c1fbf78fb68c084292fb6",
+      "n_duplicate": 0,
+      "n_probe_isolation": 0,
+      "n_pretrain": 275,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "rd_bioprocess_analytes_tec5": {
+      "status": "ok",
+      "domain": "chem",
+      "licence": "per dataset; see raw/raman_data/export_report.json",
+      "url": "https://github.com/ml-lab-htw/raman_data",
+      "label_kind": null,
+      "n_raw": 395,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 300.0,
+      "native_max": 3210.0,
+      "lasers": [],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "a013afb23d39db421b8f32ef344800dbd713fc9912cf0c97fc7240b762213712",
+      "n_duplicate": 0,
+      "n_probe_isolation": 0,
+      "n_pretrain": 395,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "rd_bioprocess_analytes_tornado": {
+      "status": "ok",
+      "domain": "chem",
+      "licence": "per dataset; see raw/raman_data/export_report.json",
+      "url": "https://github.com/ml-lab-htw/raman_data",
+      "label_kind": null,
+      "n_raw": 385,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 300.0,
+      "native_max": 3300.0,
+      "lasers": [],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "5700f3505146a7c7b0ec83329dc3cca146f532fb35f2442d1e41cacf409f754f",
+      "n_duplicate": 0,
+      "n_probe_isolation": 0,
+      "n_pretrain": 385,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "rd_ecoli_metabolites_dig4bio": {
+      "status": "ok",
+      "domain": "chem",
+      "licence": "per dataset; see raw/raman_data/export_report.json",
+      "url": "https://github.com/ml-lab-htw/raman_data",
+      "label_kind": null,
+      "n_raw": 384,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": 390.63,
+      "native_max": 3383.61,
+      "lasers": [],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "raw_fingerprint": "5a3f7ee4e93337057cb1066e449b9d7f9464d7f617e9de29533e05dee1bae386",
+      "n_duplicate": 0,
+      "n_probe_isolation": 0,
+      "n_pretrain": 384,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    },
+    "rd_bioprocess_analytes_ecoli_metabolites": {
+      "status": "skipped: foundation\\data\\raw\\raman_data\\bioprocess_analytes_ecoli_metabolites.npz missing; run the export_raman_data step: python -m venv foundation/.venv-raman-data; foundation/.venv-raman-data/Scripts/python.exe -m pip install \"git+https://github.com/ml-lab-htw/raman_data@c92289e\" pyyaml; foundation/.venv-raman-data/Scripts/python.exe foundation/tools/export_raman_data.py",
+      "domain": "chem",
+      "licence": "per dataset; see raw/raman_data/export_report.json",
+      "url": "https://github.com/ml-lab-htw/raman_data",
+      "label_kind": null,
+      "n_raw": 0,
+      "n_unusable": 0,
+      "n_leaked": 0,
+      "n_capped": 0,
+      "native_min": null,
+      "native_max": null,
+      "lasers": [],
+      "max_similarity_hist": {
+        "0.99": 0,
+        "0.995": 0,
+        "0.999": 0
+      },
+      "n_duplicate": 0,
+      "n_probe_isolation": 0,
+      "n_pretrain": 0,
+      "n_probe_train": 0,
+      "n_probe_test": 0
+    }
+  },
+  "totals": {
+    "pretrain": 242156,
+    "probe_train": 1342,
+    "probe_test": 1142
+  }
+}
