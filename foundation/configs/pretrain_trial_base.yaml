@@ -1,0 +1,22 @@
+# Phase 1 size trial (spec section 7): every preset gets the same 50 epochs.
+tag: trial
+preset: base
+corpus_dir: foundation/data/corpus_v1
+run_root: foundation/runs/pretrain
+seed: 0
+device: cuda
+batch_size: 512
+lr: 3.0e-4
+weight_decay: 0.05
+betas: [0.9, 0.95]
+warmup_epochs: 10
+max_epochs: 50
+grad_clip: 1.0
+mask_ratio: 0.5
+mask_block: [2, 6]
+deriv_weight: 0.5
+corruption: pretrain
+probe_every: 10
+patience: 3
+amp: true
+n_recon: 16
