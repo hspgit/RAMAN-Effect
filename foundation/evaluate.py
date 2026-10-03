@@ -13,6 +13,7 @@ re-reads the saved predictions.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 from datetime import datetime
@@ -68,8 +69,23 @@ def unfinished(runs):
     return [r[0] for r in runs if not (r[5] / "summary.json").exists()]
 
 
-def score(cfg, runs, out, log=print):
-    """Predict each task's test set once per run; save predictions and labels."""
+def _manifest(runs):
+    """{key: run dir, LR and SHA-1 of the frozen add-on} for every run to be scored."""
+    return {key: {"run_dir": str(rdir), "lr": lr,
+                  "addon_sha1": hashlib.sha1((rdir / "addon.pt").read_bytes()).hexdigest()}
+            for key, _t, _arm, lr, _seed, rdir in runs}
+
+
+def _write_lock(path, obj):
+    """Atomic write: a crash never leaves a half-written lock."""
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(obj, indent=2))
+    os.replace(tmp, path)
+
+
+def score(cfg, runs, out, log=print, skip_existing=False):
+    """Predict each task's test set once per run; save predictions and labels.
+    skip_existing resumes an interrupted pass: runs whose predictions are saved are kept."""
     device = torch.device(cfg["device"] if cfg["device"] != "cuda" or torch.cuda.is_available()
                           else "cpu")
     preset, a_state = load_a(cfg["a_ckpt"])
@@ -79,6 +95,8 @@ def score(cfg, runs, out, log=print):
         np.save(out / t / "y_test.npy", task.splits["test"].y)
     test = {t: GPUSplit(task.splits["test"], device) for t, task in tasks.items()}
     for n, (key, t, arm, lr, seed, rdir) in enumerate(runs, 1):
+        if skip_existing and (out / f"{key}.npy").exists():
+            continue
         summary = json.loads((rdir / "summary.json").read_text())
         model, _ = build_model(arm, len(tasks[t].classes), preset, a_state, seed,
                                lora_rank=summary["lora_rank"])
@@ -275,15 +293,32 @@ def main(argv=None):
         if not lock.exists():
             raise SystemExit(f"{lock} missing: the test sets have not been scored yet")
         scored = json.loads(lock.read_text())
+        if scored["status"] != "complete":
+            raise SystemExit(f"{lock} records an interrupted scoring pass; re-run "
+                             "`python -m foundation.evaluate` to finish it first")
         have_curve = scored["curve"]
     else:
+        todo = runs + (crun if have_curve else [])
+        manifest = json.loads(json.dumps(_manifest(todo)))
+        resume = False
         if lock.exists():
-            raise SystemExit(f"the test sets were already scored ({lock}); use --report-only")
-        score(cfg, runs + (crun if have_curve else []), out)
-        lock.write_text(json.dumps({"date": datetime.now().isoformat(timespec="seconds"),
-                                    "git_sha": _git_sha(), "curve": have_curve,
-                                    "runs": [r[0] for r in runs + (crun if have_curve else [])]},
-                                   indent=2))
+            scored = json.loads(lock.read_text())
+            if scored["status"] == "complete":
+                raise SystemExit(f"the test sets were already scored ({lock}); use --report-only")
+            if scored["runs"] != manifest or scored["curve"] != have_curve:
+                raise SystemExit(f"{lock} records an interrupted scoring pass, but the recorded runs "
+                                 "or add-ons differ from the current ones; inspect the lock and the "
+                                 "saved predictions by hand before doing anything else")
+            print(f"[test] resuming an interrupted scoring pass ({len(scored['runs'])} runs recorded)")
+            resume = True
+        else:
+            out.mkdir(parents=True, exist_ok=True)
+            _write_lock(lock, {"status": "started",
+                               "date": datetime.now().isoformat(timespec="seconds"),
+                               "git_sha": _git_sha(), "curve": have_curve, "runs": manifest})
+        score(cfg, todo, out, skip_existing=resume)
+        scored = json.loads(lock.read_text())
+        _write_lock(lock, {**scored, "status": "complete"})
     res = collect(cfg, runs, out)
     a = analyse(res)
     curve = curve_table(cfg, curve_results(cfg, crun, out), res) if have_curve else None

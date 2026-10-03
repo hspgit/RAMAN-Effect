@@ -102,3 +102,68 @@ def test_unpaired_seeds_raise():
                                 "addon_bytes": 100, "seconds": 1.0}] * 2} for a in ARMS}}
     with pytest.raises(ValueError, match="not paired"):
         evaluate.analyse(res)
+
+
+def _crash_on_third_load(monkeypatch):
+    real, calls = evaluate.load_addon, {"n": 0}
+
+    def flaky(model, state):
+        calls["n"] += 1
+        if calls["n"] == 3:
+            raise RuntimeError("simulated crash while scoring")
+        return real(model, state)
+
+    monkeypatch.setattr(evaluate, "load_addon", flaky)
+    return real
+
+
+def _predictions(out, task):
+    return sorted(p.name for p in (out / task).glob("*.npy") if p.name != "y_test.npy")
+
+
+def _interrupted(finished, tmp_path, monkeypatch):
+    cfg, path = finished
+    results = tmp_path / "results"
+    real = _crash_on_third_load(monkeypatch)
+    args = ["--config", path, "--skip-curve", "--results", str(results)]
+    with pytest.raises(RuntimeError, match="simulated crash"):
+        evaluate.main(args)
+    monkeypatch.setattr(evaluate, "load_addon", real)
+    return cfg, path, args, Path(cfg["run_root"]) / "final_test"
+
+
+def test_crash_mid_scoring_leaves_a_started_lock_and_resumes(finished, tmp_path, monkeypatch, capsys):
+    cfg, path, args, out = _interrupted(finished, tmp_path, monkeypatch)
+    lock = json.loads((out / "scored.json").read_text())
+    assert lock["status"] == "started" and len(lock["runs"]) == 16
+    assert len(_predictions(out, "T1")) == 2 and _predictions(out, "T2") == []
+    first = {n: (out / "T1" / n).read_bytes() for n in _predictions(out, "T1")}
+    capsys.readouterr()
+    evaluate.main(args)
+    assert "resuming an interrupted scoring pass" in capsys.readouterr().out
+    done = json.loads((out / "scored.json").read_text())
+    assert done["status"] == "complete" and done["runs"] == lock["runs"]
+    assert len(_predictions(out, "T1")) + len(_predictions(out, "T2")) == 16
+    assert all((out / "T1" / n).read_bytes() == b for n, b in first.items())   # kept, not rescored
+    with pytest.raises(SystemExit, match="already scored"):
+        evaluate.main(args)
+
+
+def test_started_lock_with_changed_addon_is_refused(finished, tmp_path, monkeypatch):
+    import torch
+    cfg, path, args, out = _interrupted(finished, tmp_path, monkeypatch)
+    key = next(iter(json.loads((out / "scored.json").read_text())["runs"]))
+    addon = Path(json.loads((out / "scored.json").read_text())["runs"][key]["run_dir"]) / "addon.pt"
+    state = torch.load(addon, weights_only=True)
+    name = next(iter(state))
+    state[name] = state[name] + 1.0
+    torch.save(state, addon)
+    with pytest.raises(SystemExit, match="interrupted scoring pass"):
+        evaluate.main(args)
+    assert json.loads((out / "scored.json").read_text())["status"] == "started"
+
+
+def test_report_only_refuses_an_interrupted_pass(finished, tmp_path, monkeypatch):
+    cfg, path, args, out = _interrupted(finished, tmp_path, monkeypatch)
+    with pytest.raises(SystemExit, match="interrupted"):
+        evaluate.main(["--config", path, "--report-only", "--results", str(tmp_path / "results")])
