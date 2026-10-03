@@ -38,3 +38,27 @@ time. Continue one that was still improving:
 venv/Scripts/python.exe -m foundation.pretrain --resume foundation/runs/pretrain/<run> --max-epochs 300
 ```
 Plan 3 loads `<run>/ckpt_best.pt` (`{"encoder", "preset", "epoch", "probe"}`).
+
+## Phases 3-4: adapt A (arms S / LP / B1 / B2) and score the test sets once
+
+All settings live in `foundation/configs/adapt.yaml`. Every run ends at a stage's
+`max_epochs` or when validation loss is flat for 5 epochs, never on time; finished runs
+are skipped, so any command can simply be re-run after an interruption.
+```
+venv/Scripts/python.exe -m foundation.adapt sweep     # 3 LRs per arm on seed 1 -> <task>/selection.json
+venv/Scripts/python.exe -m foundation.adapt seeds     # seeds 2-5 at the selected LR
+venv/Scripts/python.exe -m foundation.adapt curve     # optional data-efficiency curve (T1 stage ii)
+venv/Scripts/python.exe -m foundation.adapt status    # what is finished
+```
+One run by hand: `venv/Scripts/python.exe -m foundation.adapt run --task T1 --arm B2 --lr 3e-3 --seed 1`.
+Each run folder (`foundation/runs/adapt/<task>/<arm>/lr<lr>_seed<s>/`) holds `config.json`
+(with git SHA and versions), `metrics.jsonl`, `val_pred.npy`, `addon.pt` (the trainable
+parameters: head for LP; LoRA + norms + head for B2; everything for S and B1) and
+`summary.json`.
+
+Final evaluation scores T1 test and T2 2019clinical **once** and writes
+`foundation/results/adaptation.md`; a second scoring pass is refused:
+```
+venv/Scripts/python.exe -m foundation.evaluate                # or --skip-curve without the curve
+venv/Scripts/python.exe -m foundation.evaluate --report-only  # rebuild the report from saved predictions
+```
