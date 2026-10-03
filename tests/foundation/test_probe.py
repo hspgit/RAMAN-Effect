@@ -69,3 +69,67 @@ def test_evaluate_and_raw_baseline_on_fake_corpus(fake_corpus):
     assert out["probe_score"] == pytest.approx((out["knn_score"] + out["logreg_score"]) / 2)
     assert raw_knn_score(X, M, ps) > 0.9          # fake classes are easy on raw spectra
     assert embed(enc, X, M, ps.sample_idx, torch.device("cpu")).shape == (len(ps.sample_idx), 128)
+
+
+def test_evaluate_aggregates_two_probe_tasks_and_two_sources():
+    from foundation.data.harmonize import GRID
+
+    rng = np.random.default_rng(0)
+    n_wn = GRID.size  # 1001 points
+    X, M, rows = [], [], []
+
+    # Helper to add spectra
+    def add_rows(source, split, label, n_rows, peak_centres):
+        for i in range(n_rows):
+            centre = rng.choice(peak_centres)
+            y = np.exp(-0.5 * ((GRID - centre) / 15) ** 2) + rng.normal(0, 0.01, n_wn)
+            y = (y - y.min()) / (y.max() - y.min() + 1e-8)
+            X.append(y.astype(np.float16))
+            M.append(np.ones(n_wn, bool))
+            rows.append({"source": source, "split": split, "label": label})
+
+    # Two pretrain sources with clearly different peak regions
+    add_rows("s1", "pretrain", None, 40, [600, 700, 800])
+    add_rows("s2", "pretrain", None, 40, [1200, 1300, 1400])
+
+    # Probe source "pa": 3 classes, 4 train + 4 test per class
+    for cls, centre in enumerate([900, 1000, 1100]):
+        add_rows("pa", "probe_train", f"c{cls}", 4, [centre])
+        add_rows("pa", "probe_test", f"c{cls}", 4, [centre])
+
+    # Probe source "pb": 4 classes, 4 train + 4 test per class
+    for cls, centre in enumerate([500, 550, 600, 650]):
+        add_rows("pb", "probe_train", f"d{cls}", 4, [centre])
+        add_rows("pb", "probe_test", f"d{cls}", 4, [centre])
+
+    X = np.stack(X)
+    M = np.stack(M)
+    meta = pd.DataFrame(rows)
+
+    torch.manual_seed(0)
+    ps = build_probe_set(meta)
+    enc = SpectralEncoder(PRESETS["tiny"])
+    out = evaluate(enc, X, M, ps, torch.device("cpu"))
+
+    # Assert per_task structure
+    assert set(out["per_task"]) == {"pa", "pb"}
+
+    # Assert per-task scores are in [0, 1]
+    for task_name, task_scores in out["per_task"].items():
+        assert 0 <= task_scores["knn_f1"] <= 1
+        assert 0 <= task_scores["logreg_f1"] <= 1
+
+    # Assert aggregation
+    knn_mean = np.mean([out["per_task"]["pa"]["knn_f1"], out["per_task"]["pb"]["knn_f1"]])
+    lr_mean = np.mean([out["per_task"]["pa"]["logreg_f1"], out["per_task"]["pb"]["logreg_f1"]])
+    assert out["knn_score"] == pytest.approx(knn_mean)
+    assert out["logreg_score"] == pytest.approx(lr_mean)
+    assert out["probe_score"] == pytest.approx((out["knn_score"] + out["logreg_score"]) / 2)
+
+    # Assert rankme is finite and >= 1
+    assert np.isfinite(out["rankme"])
+    assert out["rankme"] >= 1
+
+    # Assert source_id_bacc is in [0, 1] and not NaN (two sources present)
+    assert 0 <= out["source_id_bacc"] <= 1
+    assert not np.isnan(out["source_id_bacc"])
