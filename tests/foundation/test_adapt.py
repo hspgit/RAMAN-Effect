@@ -152,3 +152,67 @@ def test_head_phase_runs_the_frozen_encoder_without_dropout(adapt_cfg, tmp_path)
         modes.clear()
         train_phase(model, "full", *args)
         assert any(modes)
+
+
+def test_run_records_model_a_fingerprint_and_versions(adapt_cfg):
+    from foundation.arms import a_fingerprint
+    s = run_one(adapt_cfg, "T2", "LP", 1e-2, 1, log=lambda *_: None)
+    assert s["a_sha1"] == a_fingerprint(adapt_cfg["a_ckpt"])
+    saved = json.loads((run_dir_for(adapt_cfg, "T2", "LP", 1e-2, 1) / "config.json").read_text())
+    assert saved["a_sha1"] == s["a_sha1"]
+    assert "numpy" in saved and "sklearn" in saved
+
+
+def test_queue_records_model_a_fingerprint(adapt_cfg):
+    from foundation.arms import a_fingerprint
+    rs = sweep(adapt_cfg, tasks=["T2"], arms=["LP"], log=lambda *_: None)
+    assert rs and all(r["a_sha1"] == a_fingerprint(adapt_cfg["a_ckpt"]) for r in rs)
+
+
+def test_run_one_with_a_needs_its_fingerprint(adapt_cfg):
+    a = load_a(adapt_cfg["a_ckpt"])
+    with pytest.raises(ValueError, match="a_sha1"):
+        run_one(adapt_cfg, "T2", "LP", 1e-2, 1, a=a, log=lambda *_: None)
+
+
+def test_a_fingerprint_is_sha1_of_the_file(tmp_path):
+    import hashlib
+
+    from foundation.arms import a_fingerprint
+    p = tmp_path / "f.bin"
+    p.write_bytes(b"x" * 3_000_000)
+    assert a_fingerprint(p) == hashlib.sha1(p.read_bytes()).hexdigest()
+
+
+def test_run_dir_needs_a_one_significant_digit_lr(adapt_cfg):
+    with pytest.raises(ValueError, match="one-significant-digit"):
+        run_dir_for(adapt_cfg, "T1", "S", 2.5e-4, 1)
+    for lr in (1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 0.1 * 3e-3):
+        run_dir_for(adapt_cfg, "T1", "S", lr, 1)
+
+
+def test_logged_lr_is_the_heads_under_layer_decay(adapt_cfg, tmp_path):
+    preset, a_state = load_a(adapt_cfg["a_ckpt"])
+    model, _ = build_model("B1", 3, preset, a_state, seed=0)
+    task = load_task("T1", adapt_cfg)
+    cpu = torch.device("cpu")
+    tr, va = GPUSplit(task.splits["ft_train"], cpu), GPUSplit(task.splits["ft_val"], cpu)
+    cfg = dict(adapt_cfg, lr_warmup_epochs=0)
+    with open(tmp_path / "m.jsonl", "w") as metrics:
+        train_phase(model, "full", tr, va, 1e-3, 2, False, "t", cfg,
+                    torch.Generator().manual_seed(0), cpu, lambda *_: None, metrics)
+    recs = [json.loads(l) for l in (tmp_path / "m.jsonl").read_text().splitlines()]
+    from foundation.pretrain import lr_factor
+    steps = -(-len(tr) // cfg["batch_size"])
+    assert recs[0]["lr"] == pytest.approx(1e-3 * lr_factor(steps, 0, 2 * steps))
+
+
+def test_cli_guards(adapt_cfg, tmp_path):
+    import yaml
+    p = tmp_path / "adapt.yaml"
+    p.write_text(yaml.safe_dump(adapt_cfg))
+    with pytest.raises(SystemExit):
+        adapt.main(["sweep", "--config", str(p), "--ft-per-class", "5"])
+    with pytest.raises(SystemExit):
+        adapt.main(["status", "--config", str(tmp_path / "missing.yaml")])
+    assert not (tmp_path / "runs").exists()

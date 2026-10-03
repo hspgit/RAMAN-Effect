@@ -27,13 +27,14 @@ import time
 from pathlib import Path
 
 import numpy as np
+import sklearn
 import torch
 import torch.nn.functional as F
 import yaml
 from sklearn.metrics import f1_score
 
-from .arms import (ARMS, addon_state, build_model, load_a, param_groups, phases,
-                   set_trainable, total_count, trainable_count)
+from .arms import (ARMS, a_fingerprint, addon_state, build_model, load_a, param_groups,
+                   phases, set_trainable, total_count, trainable_count)
 from .data.corrupt import PRESETS as CORRUPTIONS
 from .data.corrupt import corrupt
 from .data.tasks import Split, load_t1, load_t2
@@ -95,6 +96,11 @@ def subsample_per_class(split: Split, n, seed=0):
 
 
 def run_dir_for(cfg, task, arm, lr, seed):
+    """Run folders are named by a one-significant-digit LR (lr3e-04_seed1), so
+    an LR that does not round-trip through that name would share a folder."""
+    if not math.isclose(float(f"{lr:.0e}"), lr, rel_tol=1e-9):
+        raise ValueError(f"run folders are named by a one-significant-digit LR (e.g. 3e-04); "
+                         f"lr {lr!r} would collide with lr {lr:.0e}")
     t = task if not cfg.get("ft_per_class") else f"{task}_pc{cfg['ft_per_class']}"
     return Path(cfg["run_root"]) / t / arm / f"lr{lr:.0e}_seed{seed}"
 
@@ -177,7 +183,8 @@ def train_phase(model, phase, train, val, lr, max_epochs, early_stop, tag, cfg, 
             bad += 1
         rec = {"tag": tag, "phase": phase, "epoch": epoch, "max_epochs": max_epochs,
                "train_loss": total / max(1, seen), "val_loss": vloss, "val_acc": vacc,
-               "lr": opt.param_groups[0]["lr"], "seconds": secs[-1]}
+               "lr": max(g["lr"] for g in opt.param_groups),   # the head's (largest) LR
+               "seconds": secs[-1]}
         metrics.write(json.dumps(rec) + "\n")
         metrics.flush()
         left = max_epochs - epoch
@@ -218,8 +225,12 @@ def _stage1_source(cfg, task_name, arm, lr, seed):
     return path if path.exists() else None
 
 
-def run_one(cfg, task_name, arm, lr, seed, task=None, a=None, log=print):
-    """One arm x task x LR x seed. Returns the summary dict (also saved)."""
+def run_one(cfg, task_name, arm, lr, seed, task=None, a=None, log=print, a_sha1=None):
+    """One arm x task x LR x seed. Returns the summary dict (also saved).
+    `a` is load_a()'s result; when given, `a_sha1` must be the fingerprint of
+    the file it was loaded from (taken at the same moment)."""
+    if a is not None and a_sha1 is None:
+        raise ValueError("run_one got model A's weights without their a_sha1 fingerprint")
     out = run_dir_for(cfg, task_name, arm, lr, seed)
     if (out / "summary.json").exists():
         log(f"[skip] {out} already finished")
@@ -227,7 +238,9 @@ def run_one(cfg, task_name, arm, lr, seed, task=None, a=None, log=print):
     device = torch.device(cfg["device"] if cfg["device"] != "cuda" or torch.cuda.is_available()
                           else "cpu")
     task = task or load_task(task_name, cfg)
-    preset, a_state = a or load_a(cfg["a_ckpt"])
+    if a is None:
+        a, a_sha1 = load_a(cfg["a_ckpt"]), a_fingerprint(cfg["a_ckpt"])
+    preset, a_state = a
     model, rank = build_model(arm, len(task.classes), preset, a_state, seed)
     if arm == "B2" and cfg["lora_dropout"] != 0.05:
         raise ValueError("spec 6.1 fixes LoRA dropout at 0.05")
@@ -236,7 +249,8 @@ def run_one(cfg, task_name, arm, lr, seed, task=None, a=None, log=print):
     out.mkdir(parents=True, exist_ok=True)
     (out / "config.json").write_text(json.dumps({
         **cfg, "task": task_name, "arm": arm, "lr": lr, "seed": seed, "lora_rank": rank,
-        "preset": preset, "git_sha": _git_sha(), "torch": torch.__version__,
+        "preset": preset, "a_sha1": a_sha1, "git_sha": _git_sha(), "torch": torch.__version__,
+        "numpy": np.__version__, "sklearn": sklearn.__version__,
         "python": platform.python_version(), "device": str(device)}, indent=2))
     t0 = time.time()
     stages = []
@@ -275,7 +289,7 @@ def run_one(cfg, task_name, arm, lr, seed, task=None, a=None, log=print):
     _save_atomic(addon_state(model), out / "addon.pt")
     summary = {
         "task": task_name, "arm": arm, "lr": lr, "seed": seed, "lora_rank": rank,
-        "ft_per_class": cfg.get("ft_per_class"),
+        "ft_per_class": cfg.get("ft_per_class"), "a_sha1": a_sha1,
         "val_acc": vacc, "val_loss": vloss,
         "val_macro_f1": float(f1_score(vy, vpred, average="macro")),
         "trainable_params": trainable_count(model), "total_params": total_count(model),
@@ -304,13 +318,14 @@ def selection_path(cfg, task):
 
 def _queue(cfg, jobs, log):
     """Run (task, arm, lr, seed) jobs in order, loading each task and A once."""
-    a = load_a(cfg["a_ckpt"])
+    a, a_sha1 = load_a(cfg["a_ckpt"]), a_fingerprint(cfg["a_ckpt"])
     tasks, results = {}, []
     for n, (t, arm, lr, seed) in enumerate(jobs, 1):
         log(f"[queue] run {n}/{len(jobs)}: {arm} {t} lr {lr:.0e} seed {seed}")
         if t not in tasks:
             tasks[t] = load_task(t, cfg)
-        results.append(run_one(cfg, t, arm, lr, seed, task=tasks[t], a=a, log=log))
+        results.append(run_one(cfg, t, arm, lr, seed, task=tasks[t], a=a, log=log,
+                               a_sha1=a_sha1))
     return results
 
 
@@ -387,8 +402,11 @@ def main(argv=None):
     ap.add_argument("--ft-per-class", type=int, help="T1 stage-ii spectra per class (spec 8.5)")
     ap.add_argument("--device")
     args = ap.parse_args(argv)
-    cfg = load_config(args.config if Path(args.config).exists() else None,
-                      device=args.device, ft_per_class=args.ft_per_class)
+    if not Path(args.config).exists():
+        ap.error(f"config {args.config} not found")
+    if args.ft_per_class is not None and args.command != "run":
+        ap.error("--ft-per-class is only for `run`; `curve` sets it per point from the config")
+    cfg = load_config(args.config, device=args.device, ft_per_class=args.ft_per_class)
     if args.command == "run":
         if args.lr is None or args.seed is None or len(args.task) != 1 or len(args.arm) != 1:
             ap.error("run needs exactly one --task, one --arm, --lr and --seed")

@@ -27,9 +27,9 @@ import numpy as np  # noqa: E402
 import torch  # noqa: E402
 from sklearn.metrics import confusion_matrix, f1_score  # noqa: E402
 
-from .adapt import (TASKS, GPUSplit, load_config, load_task, predict,  # noqa: E402
+from .adapt import (STAGES, TASKS, GPUSplit, load_config, load_task, predict,  # noqa: E402
                     run_dir_for, selection_path)
-from .arms import ARMS, build_model, load_a, load_addon  # noqa: E402
+from .arms import ARMS, a_fingerprint, build_model, load_a, load_addon  # noqa: E402
 from .pretrain import _git_sha  # noqa: E402
 from .stats import bootstrap_diff, mcnemar, mean_sd, q1, q3  # noqa: E402
 
@@ -83,29 +83,58 @@ def _write_lock(path, obj):
     os.replace(tmp, path)
 
 
+def _save_npy(path, arr):
+    """Atomic np.save: a crash never leaves a truncated prediction file."""
+    tmp = path.with_suffix(".npy.tmp")
+    with open(tmp, "wb") as f:
+        np.save(f, arr)
+    os.replace(tmp, path)
+
+
+def _saved(path, n):
+    """True if `path` holds a readable prediction vector of length n."""
+    try:
+        return np.load(path).shape == (n,)
+    except Exception:
+        return False
+
+
 def score(cfg, runs, out, log=print, skip_existing=False):
     """Predict each task's test set once per run; save predictions and labels.
-    skip_existing resumes an interrupted pass: runs whose predictions are saved are kept."""
+    skip_existing resumes an interrupted pass: runs whose predictions are saved
+    (readable, one per test sample) are kept; anything else is re-scored.
+
+    Before touching the test set, each rebuilt model must reproduce the run's own
+    saved validation predictions (val_pred.npy) to within one sample."""
     device = torch.device(cfg["device"] if cfg["device"] != "cuda" or torch.cuda.is_available()
                           else "cpu")
     preset, a_state = load_a(cfg["a_ckpt"])
     tasks = {t: load_task(t, cfg) for t in sorted({r[1] for r in runs})}
     for t, task in tasks.items():
         (out / t).mkdir(parents=True, exist_ok=True)
-        np.save(out / t / "y_test.npy", task.splits["test"].y)
+        _save_npy(out / t / "y_test.npy", task.splits["test"].y)
     test = {t: GPUSplit(task.splits["test"], device) for t, task in tasks.items()}
+    val = {t: GPUSplit(task.splits[STAGES[t][-1][2]], device) for t, task in tasks.items()}
     for n, (key, t, arm, lr, seed, rdir) in enumerate(runs, 1):
-        if skip_existing and (out / f"{key}.npy").exists():
+        if skip_existing and _saved(out / f"{key}.npy", len(test[t])):
             continue
         summary = json.loads((rdir / "summary.json").read_text())
         model, _ = build_model(arm, len(tasks[t].classes), preset, a_state, seed,
                                lora_rank=summary["lora_rank"])
         load_addon(model, torch.load(rdir / "addon.pt", map_location="cpu", weights_only=True))
         model.to(device)
+        vpred = predict(model, val[t], device).argmax(dim=1).cpu().numpy()
+        vsaved = np.load(rdir / "val_pred.npy")
+        differ = int((vpred != vsaved).sum()) if vpred.shape == vsaved.shape else len(vpred)
+        if differ > 1:
+            raise RuntimeError(f"{key}: the rebuilt model does not reproduce the run's validation "
+                               f"predictions ({differ}/{len(vpred)} samples differ from "
+                               f"{rdir / 'val_pred.npy'}); its test set was not scored")
         pred = predict(model, test[t], device).argmax(dim=1).cpu().numpy()
         (out / key).parent.mkdir(parents=True, exist_ok=True)
-        np.save(out / f"{key}.npy", pred)
-        log(f"[test] {n}/{len(runs)} {key}: acc {(pred == tasks[t].splits['test'].y).mean():.4f}")
+        _save_npy(out / f"{key}.npy", pred)
+        log(f"[test] {n}/{len(runs)} {key}: val check {len(vpred) - differ}/{len(vpred)} | "
+            f"acc {(pred == tasks[t].splits['test'].y).mean():.4f}")
 
 
 def _load(out, key):
@@ -274,7 +303,9 @@ def main(argv=None):
     ap.add_argument("--results", default="foundation/results")
     ap.add_argument("--device")
     args = ap.parse_args(argv)
-    cfg = load_config(args.config if Path(args.config).exists() else None, device=args.device)
+    if not Path(args.config).exists():
+        ap.error(f"config {args.config} not found")
+    cfg = load_config(args.config, device=args.device)
     out = Path(cfg["run_root"]) / FINAL
     runs = planned_runs(cfg)
     missing = unfinished(runs)
@@ -299,23 +330,34 @@ def main(argv=None):
         have_curve = scored["curve"]
     else:
         todo = runs + (crun if have_curve else [])
+        current = a_fingerprint(cfg["a_ckpt"])
+        stale = [key for key, *_r, rdir in todo
+                 if json.loads((rdir / "summary.json").read_text()).get("a_sha1") != current]
+        if stale:
+            raise SystemExit(f"{len(stale)} runs were not trained on the current model A "
+                             f"({cfg['a_ckpt']}, sha1 {current[:12]}), e.g. {stale[:3]}; their "
+                             "add-ons only mean something on top of the exact A they were "
+                             "trained with")
         manifest = json.loads(json.dumps(_manifest(todo)))
         resume = False
         if lock.exists():
             scored = json.loads(lock.read_text())
             if scored["status"] == "complete":
                 raise SystemExit(f"the test sets were already scored ({lock}); use --report-only")
-            if scored["runs"] != manifest or scored["curve"] != have_curve:
-                raise SystemExit(f"{lock} records an interrupted scoring pass, but the recorded runs "
-                                 "or add-ons differ from the current ones; inspect the lock and the "
-                                 "saved predictions by hand before doing anything else")
+            if (scored["runs"] != manifest or scored["curve"] != have_curve
+                    or scored.get("a_sha1") != current):
+                raise SystemExit(f"{lock} records an interrupted scoring pass, but the recorded "
+                                 "runs, add-ons or model A differ from the current ones; inspect "
+                                 "the lock and the saved predictions by hand before doing "
+                                 "anything else")
             print(f"[test] resuming an interrupted scoring pass ({len(scored['runs'])} runs recorded)")
             resume = True
         else:
             out.mkdir(parents=True, exist_ok=True)
             _write_lock(lock, {"status": "started",
                                "date": datetime.now().isoformat(timespec="seconds"),
-                               "git_sha": _git_sha(), "curve": have_curve, "runs": manifest})
+                               "git_sha": _git_sha(), "a_sha1": current, "curve": have_curve,
+                               "runs": manifest})
         score(cfg, todo, out, skip_existing=resume)
         scored = json.loads(lock.read_text())
         _write_lock(lock, {**scored, "status": "complete"})

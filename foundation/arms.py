@@ -12,6 +12,7 @@ plus norms plus head (B2), or the whole model (S, B1).
 from __future__ import annotations
 
 import copy
+import hashlib
 import re
 
 import torch
@@ -41,6 +42,16 @@ def load_a(path):
     """Model A's checkpoint -> (preset, encoder state_dict)."""
     ck = torch.load(path, map_location="cpu", weights_only=True)
     return ck["preset"], ck["encoder"]
+
+
+def a_fingerprint(path) -> str:
+    """SHA-1 hex digest of model A's file. Recorded per run and checked before
+    the test pass: LP/B1/B2 add-ons only mean something on top of this exact A."""
+    h = hashlib.sha1()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 def choose_rank(encoder: SpectralEncoder, n_classes: int):

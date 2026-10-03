@@ -167,3 +167,61 @@ def test_report_only_refuses_an_interrupted_pass(finished, tmp_path, monkeypatch
     cfg, path, args, out = _interrupted(finished, tmp_path, monkeypatch)
     with pytest.raises(SystemExit, match="interrupted"):
         evaluate.main(["--config", path, "--report-only", "--results", str(tmp_path / "results")])
+
+
+def test_model_a_changed_after_training_is_refused(finished, tmp_path):
+    from conftest import make_fake_a
+    cfg, path = finished
+    make_fake_a(Path(cfg["a_ckpt"]), seed=1)
+    with pytest.raises(SystemExit, match="model A") as e:
+        evaluate.main(["--config", path, "--skip-curve", "--results", str(tmp_path / "results")])
+    assert "T1/S_seed1" in str(e.value)
+    assert not (Path(cfg["run_root"]) / "final_test" / "scored.json").exists()
+
+
+def test_rebuilt_model_must_reproduce_its_validation_predictions(finished, tmp_path):
+    cfg, path = finished
+    sel = json.loads((Path(cfg["run_root"]) / "T1" / "selection.json").read_text())
+    from foundation.adapt import run_dir_for
+    vp = run_dir_for(cfg, "T1", "LP", sel["LP"]["lr"], 1) / "val_pred.npy"
+    np.save(vp, (np.load(vp) + 1) % 3)
+    with pytest.raises(RuntimeError, match="does not reproduce") as e:
+        evaluate.main(["--config", path, "--skip-curve", "--results", str(tmp_path / "results")])
+    assert "T1/LP_seed1" in str(e.value) and "3" in str(e.value)
+    out = Path(cfg["run_root"]) / "final_test"
+    assert json.loads((out / "scored.json").read_text())["status"] == "started"
+    assert not (out / "T1" / "LP_seed1.npy").exists()
+    assert _predictions(out, "T1") == ["S_seed1.npy", "S_seed2.npy"]
+
+
+def test_resume_rescores_a_truncated_prediction(finished, tmp_path, monkeypatch):
+    cfg, path, args, out = _interrupted(finished, tmp_path, monkeypatch)
+    victim = out / "T1" / _predictions(out, "T1")[0]
+    victim.write_bytes(victim.read_bytes()[:10])
+    evaluate.main(args)
+    assert json.loads((out / "scored.json").read_text())["status"] == "complete"
+    assert np.load(victim).shape == (30,)
+    assert not list(out.rglob("*.tmp"))
+
+
+def test_lock_records_model_a_and_logs_the_val_check(finished, tmp_path, capsys):
+    from foundation.arms import a_fingerprint
+    cfg, path = finished
+    evaluate.main(["--config", path, "--skip-curve", "--results", str(tmp_path / "results")])
+    assert "T1/S_seed1: val check 3/3 |" in capsys.readouterr().out
+    scored = json.loads((Path(cfg["run_root"]) / "final_test" / "scored.json").read_text())
+    assert scored["a_sha1"] == a_fingerprint(cfg["a_ckpt"])
+
+
+def test_started_lock_with_a_different_model_a_is_refused(finished, tmp_path, monkeypatch):
+    cfg, path, args, out = _interrupted(finished, tmp_path, monkeypatch)
+    lock = json.loads((out / "scored.json").read_text())
+    lock["a_sha1"] = "0" * 40
+    (out / "scored.json").write_text(json.dumps(lock))
+    with pytest.raises(SystemExit, match="interrupted scoring pass"):
+        evaluate.main(args)
+
+
+def test_missing_config_is_an_error(tmp_path):
+    with pytest.raises(SystemExit):
+        evaluate.main(["--config", str(tmp_path / "missing.yaml"), "--skip-curve"])
