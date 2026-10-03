@@ -1,5 +1,6 @@
 import json
 
+import numpy as np
 import pytest
 
 import foundation.pretrain as pt
@@ -25,6 +26,33 @@ def test_report_writes_plots_and_summary(finished_run):
     assert s["preset"] == "tiny" and s["epochs_run"] == 2 and s["best_epoch"] in (1, 2)
     assert s["g1_pass"] == (s["knn_score"] > s["raw_knn_score"])
     assert json.loads((run_dir / "analysis" / "summary.json").read_text())["run"] == run_dir.name
+    rec = np.load(run_dir / f"recon_epoch{s['best_epoch']:04d}.npz")
+    assert "pred_normalised" in rec and "target_normalised" in rec
+    assert rec["pred_normalised"].shape == rec["target_normalised"].shape == (4, 101, 10)
+    assert rec["pred_normalised"].dtype == rec["target_normalised"].dtype == np.float32
+
+
+def test_recon_stats_compare_the_model_with_predicting_zero():
+    r = {"hidden_tokens": np.zeros((1, 101), bool), "mask": np.ones((1, 1001), bool),
+         "target_normalised": np.random.default_rng(0).normal(size=(1, 101, 10)).astype(np.float32)}
+    r["hidden_tokens"][0, 10:20] = True
+    r["pred_normalised"] = r["target_normalised"].copy()
+    mse, zero = report.recon_stats(r, 0)
+    assert mse == pytest.approx(0.0, abs=1e-12) and zero > 0.3
+    r["pred_normalised"] = np.zeros_like(r["target_normalised"])
+    mse, zero2 = report.recon_stats(r, 0)
+    assert mse == pytest.approx(zero) and zero2 == pytest.approx(zero)
+    assert report.recon_stats({k: v for k, v in r.items() if k != "pred_normalised"}, 0) is None
+
+
+def test_plot_recon_handles_an_old_npz_without_normalised_arrays(finished_run, tmp_path):
+    run_dir, _ = finished_run
+    src = np.load(next(run_dir.glob("recon_epoch*.npz")))
+    old = {k: src[k] for k in ("clean", "mask", "corrupted", "corrupted_mask",
+                               "hidden_tokens", "reconstruction")}
+    np.savez(tmp_path / "old.npz", **old)
+    report.plot_recon(tmp_path / "old.npz", tmp_path / "old.png")
+    assert (tmp_path / "old.png").exists()
 
 
 def test_recommend_prefers_smaller_preset_within_tie():

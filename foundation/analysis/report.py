@@ -113,10 +113,27 @@ def plot_curves(run_dir, out):
     plt.close(fig)
 
 
+def recon_stats(r, i):
+    """(hidden MSE, predict-zero MSE) in per-patch normalised space over the valid points
+    of spectrum i's hidden tokens; None for an old npz without the normalised arrays."""
+    if "pred_normalised" not in r or "target_normalised" not in r:
+        return None
+    pm = patchify_np(r["mask"][i]) & r["hidden_tokens"][i][:, None]
+    if not pm.any():
+        return None
+    tgt, pred = r["target_normalised"][i], r["pred_normalised"][i]
+    return float(((pred - tgt) ** 2)[pm].mean()), float((tgt ** 2)[pm].mean())
+
+
+def patchify_np(a):
+    n_tok = -(-a.shape[0] // PATCH)
+    return np.pad(a, (0, n_tok * PATCH - a.shape[0])).reshape(n_tok, PATCH)
+
+
 def plot_recon(npz_path, out, n=4):
     r = np.load(npz_path)
     picks = np.linspace(0, len(r["clean"]) - 1, n).astype(int)   # spread over probe tasks
-    fig, axes = plt.subplots(n, 1, figsize=(12, 2.4 * n), sharex=True)
+    fig, axes = plt.subplots(n, 1, figsize=(12, 2.8 * n), sharex=True)
     for i, ax in zip(picks, np.atleast_1d(axes)):
         m = r["mask"][i]
         ax.plot(GRID[m], r["clean"][i][m], c="k", lw=1, label="clean target")
@@ -124,7 +141,17 @@ def plot_recon(npz_path, out, n=4):
         ax.plot(GRID[cm], r["corrupted"][i][cm], c="tab:gray", lw=0.6, alpha=0.7, label="corrupted input")
         hid = np.repeat(r["hidden_tokens"][i], PATCH)[:GRID.size] & m
         ax.plot(GRID, np.where(hid, r["reconstruction"][i], np.nan), c="tab:red", lw=1,
-                label="reconstruction (hidden)")
+                label="reconstruction (hidden; patch mean/scale from target)")
+        # What predicting 0 in normalised space gives after de-normalising: each hidden
+        # patch's mean, a staircase. The reconstruction has to beat this to have learned anything.
+        clean, pm = patchify_np(r["clean"][i].astype(np.float64)), patchify_np(m)
+        mean = (clean * pm).sum(-1) / np.maximum(pm.sum(-1), 1)
+        stair = np.repeat(mean, PATCH)[:GRID.size]
+        ax.plot(GRID, np.where(hid, stair, np.nan), c="tab:gray", ls=":", lw=1.2,
+                label="predict-zero baseline")
+        stats = recon_stats(r, i)
+        if stats is not None:
+            ax.set_title(f"hidden MSE {stats[0]:.3f} vs predict-zero {stats[1]:.3f}", fontsize=9)
         for j in np.flatnonzero(r["hidden_tokens"][i]):
             lo = GRID[min(j * PATCH, GRID.size - 1)]
             ax.axvspan(lo, lo + PATCH * (GRID[1] - GRID[0]), color="tab:red", alpha=0.06, lw=0)

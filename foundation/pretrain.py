@@ -194,9 +194,11 @@ def reconstruct(enc, dec, X, M, rows, cfg, device):
     mean = (tgt * pm).sum(-1, keepdim=True) / cnt
     sd = torch.sqrt((((tgt - mean) ** 2) * pm).sum(-1, keepdim=True) / cnt + TARGET_EPS)
     recon = (pred * sd + mean).flatten(1)[:, :x.shape[1]]
+    tgt_n = (tgt - mean) / sd
     cpu = lambda t: t.cpu().numpy()
     return {"clean": cpu(x), "mask": cpu(m), "corrupted": cpu(xc), "corrupted_mask": cpu(mc),
-            "hidden_tokens": cpu(hidden), "reconstruction": cpu(recon)}
+            "hidden_tokens": cpu(hidden), "reconstruction": cpu(recon),
+            "pred_normalised": cpu(pred.float()), "target_normalised": cpu(tgt_n.float())}
 
 
 def _state(cfg, enc, dec, opt, scaler, sched, epoch, track, gens, device):
