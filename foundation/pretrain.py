@@ -162,12 +162,16 @@ def reconstruct(enc, dec, X, M, rows, cfg, device):
             "hidden_tokens": cpu(hidden), "reconstruction": cpu(recon)}
 
 
-def _state(cfg, enc, dec, opt, scaler, sched, epoch, track, gens):
-    return {"config": cfg, "epoch": epoch, "track": track,
+def _state(cfg, enc, dec, opt, scaler, sched, epoch, track, gens, device):
+    state = {"config": cfg, "epoch": epoch, "track": track,
             "encoder": enc.state_dict(), "decoder": dec.state_dict(),
             "optimizer": opt.state_dict(), "scaler": scaler.state_dict(),
             "scheduler": sched.state_dict(),
-            "gen_cpu": gens["cpu"].get_state(), "gen_dev": gens["dev"].get_state()}
+            "gen_cpu": gens["cpu"].get_state(), "gen_dev": gens["dev"].get_state(),
+            "rng_torch": torch.get_rng_state()}
+    if device.type == "cuda":
+        state["rng_cuda"] = torch.cuda.get_rng_state()
+    return state
 
 
 def run(cfg, run_dir=None, resume=False, log=print):
@@ -188,12 +192,21 @@ def run(cfg, run_dir=None, resume=False, log=print):
                                  for t in probe_set.tasks])[:cfg["n_recon"]]
 
     if resume:
-        ck = torch.load(Path(run_dir) / "ckpt_last.pt", map_location=device, weights_only=True)
+        ck = torch.load(Path(run_dir) / "ckpt_last.pt", map_location="cpu", weights_only=True)
         enc.load_state_dict(ck["encoder"]), dec.load_state_dict(ck["decoder"])
         opt.load_state_dict(ck["optimizer"]), scaler.load_state_dict(ck["scaler"])
         sched.load_state_dict(ck["scheduler"])
         gens["cpu"].set_state(ck["gen_cpu"]), gens["dev"].set_state(ck["gen_dev"])
+        torch.set_rng_state(ck["rng_torch"])
+        if device.type == "cuda" and "rng_cuda" in ck:
+            torch.cuda.set_rng_state(ck["rng_cuda"])
         start, track = ck["epoch"] + 1, ck["track"]
+        # Filter metrics.jsonl to remove stale lines and end markers
+        metrics_path = Path(run_dir) / "metrics.jsonl"
+        lines = metrics_path.read_text(encoding="utf-8").splitlines()
+        filtered = [l for l in lines if l and (("epoch" in l and json.loads(l).get("epoch", 0) <= ck["epoch"])
+                                                 or ("epoch" in l and "probe" in l))]
+        metrics_path.write_text("\n".join(filtered) + ("\n" if filtered else ""), encoding="utf-8")
     else:
         stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
         run_dir = Path(cfg["run_root"]) / f"{stamp}_{cfg['preset']}_{cfg['tag']}"
@@ -256,7 +269,7 @@ def run(cfg, run_dir=None, resume=False, log=print):
                                 **reconstruct(enc, dec, corpus.X, corpus.M, recon_rows, cfg, device))
             metrics.write(json.dumps({"epoch": epoch, "probe": probe, "improved": improved}) + "\n")
             metrics.flush()
-            _save_atomic(_state(cfg, enc, dec, opt, scaler, sched, epoch, track, gens),
+            _save_atomic(_state(cfg, enc, dec, opt, scaler, sched, epoch, track, gens, device),
                          run_dir / "ckpt_last.pt")
             log(f"[probe] epoch {epoch} | probe {probe['probe_score']:.4f} "
                 f"(knn {probe['knn_score']:.4f}, logreg {probe['logreg_score']:.4f}, "

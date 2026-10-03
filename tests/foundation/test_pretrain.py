@@ -1,8 +1,10 @@
 import json
 import re
+from pathlib import Path
 
 import numpy as np
 import pytest
+import torch
 
 import foundation.pretrain as pt
 
@@ -68,3 +70,131 @@ def test_nonfinite_losses_abort_instead_of_spinning(cfg, monkeypatch):
 def test_checkpoint_save_is_atomic(tmp_path):
     pt._save_atomic({"a": 1}, tmp_path / "ck.pt")
     assert (tmp_path / "ck.pt").exists() and not (tmp_path / "ck.pt.tmp").exists()
+
+
+def test_resume_works_on_cuda(cfg, monkeypatch):
+    if not torch.cuda.is_available():
+        pytest.skip("needs CUDA")
+
+    # First run on CUDA for 1 epoch
+    cfg_cuda = dict(cfg)
+    cfg_cuda["device"] = "cuda"
+    cfg_cuda["max_epochs"] = 1
+    run_dir, _ = pt.run(cfg_cuda, log=lambda s: None)
+
+    # Resume to epoch 2 on CUDA
+    cfg_resume = pt.load_config(run_dir / "config.yaml", device="cuda", max_epochs=2)
+    pt.run(cfg_resume, run_dir=run_dir, resume=True, log=lambda s: None)
+
+    # Verify epochs
+    epochs = [json.loads(l)["epoch"] for l in (run_dir / "metrics.jsonl").read_text().splitlines()
+              if '"loss"' in l]
+    assert epochs == [1, 2]
+
+
+def test_resume_reproduces_an_uninterrupted_run(cfg):
+    cfg.update(max_epochs=3, probe_every=1)
+    call_count = [0]
+    original_evaluate = pt.evaluate
+
+    def evaluate_with_interrupt(*args, **kwargs):
+        call_count[0] += 1
+        if call_count[0] == 3:
+            raise KeyboardInterrupt()
+        return original_evaluate(*args, **kwargs)
+
+    # Run A: interrupted at 3rd evaluate (epoch 3)
+    import foundation.pretrain
+    old_evaluate = foundation.pretrain.evaluate
+    foundation.pretrain.evaluate = evaluate_with_interrupt
+    try:
+        pt.run(cfg, log=lambda s: None)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        foundation.pretrain.evaluate = old_evaluate
+
+    run_a = list(Path(cfg["run_root"]).glob("*_tiny_run"))[0]
+
+    # Resume run A
+    cfg_resume = pt.load_config(run_a / "config.yaml", max_epochs=3)
+    pt.run(cfg_resume, run_dir=run_a, resume=True, log=lambda s: None)
+
+    # Run B: uninterrupted
+    cfg_b = dict(cfg)
+    cfg_b["run_root"] = str(Path(cfg["run_root"]).parent / "runs_b")
+    call_count[0] = 0  # Reset for run B
+    run_b, _ = pt.run(cfg_b, log=lambda s: None)
+
+    # Compare encoders
+    ck_a = torch.load(run_a / "ckpt_last.pt", map_location="cpu", weights_only=True)
+    ck_b = torch.load(run_b / "ckpt_last.pt", map_location="cpu", weights_only=True)
+
+    for key in ck_a["encoder"]:
+        assert torch.allclose(ck_a["encoder"][key], ck_b["encoder"][key], atol=1e-6), f"Mismatch in {key}"
+
+
+def test_resume_after_a_crash_between_checkpoints_has_no_duplicate_epochs(cfg, monkeypatch):
+    cfg.update(probe_every=2, max_epochs=4)
+    call_count = [0]
+    original_evaluate = pt.evaluate
+
+    def evaluate_with_interrupt(*args, **kwargs):
+        call_count[0] += 1
+        if call_count[0] == 2:  # 2nd call is at epoch 4 (since probe_every=2, calls at epochs 2 and 4)
+            raise KeyboardInterrupt()
+        return original_evaluate(*args, **kwargs)
+
+    # Run and interrupt
+    monkeypatch.setattr(pt, "evaluate", evaluate_with_interrupt)
+    try:
+        pt.run(cfg, log=lambda s: None)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        monkeypatch.setattr(pt, "evaluate", original_evaluate)
+
+    run_dir = list(Path(cfg["run_root"]).glob("*_tiny_run"))[0]
+
+    # Resume
+    cfg_resume = pt.load_config(run_dir / "config.yaml", max_epochs=4)
+    pt.run(cfg_resume, run_dir=run_dir, resume=True, log=lambda s: None)
+
+    # Check metrics
+    lines = (run_dir / "metrics.jsonl").read_text().splitlines()
+    loss_epochs = [json.loads(l)["epoch"] for l in lines if '"loss"' in l]
+    end_lines = [l for l in lines if '"end"' in l]
+
+    assert loss_epochs == [1, 2, 3, 4], f"Got epochs: {loss_epochs}"
+    assert len(end_lines) == 1
+
+
+def test_best_checkpoint_holds_the_best_epoch_for_plan3(cfg, monkeypatch):
+    from foundation.model.encoder import PRESETS, SpectralEncoder
+
+    scores = [0.5, 0.7, 0.6]
+    call_count = [0]
+
+    def evaluate_with_scores(*args, **kwargs):
+        score = scores[call_count[0]]
+        call_count[0] += 1
+        return {
+            "probe_score": score, "knn_score": 0.5, "logreg_score": 0.5, "per_task": {},
+            "rankme": 1.0, "source_id_bacc": 0.5
+        }
+
+    monkeypatch.setattr(pt, "evaluate", evaluate_with_scores)
+    cfg.update(max_epochs=3, probe_every=1, patience=3)
+    run_dir, _ = pt.run(cfg, log=lambda s: None)
+
+    # Load ckpt_best.pt
+    ck_best = torch.load(run_dir / "ckpt_best.pt", weights_only=True)
+
+    # Verify structure
+    assert set(ck_best.keys()) == {"encoder", "preset", "epoch", "probe"}
+    assert ck_best["epoch"] == 2
+    assert ck_best["probe"]["probe_score"] == 0.7
+
+    # Verify encoder can be loaded
+    enc = SpectralEncoder(PRESETS[ck_best["preset"]])
+    enc.load_state_dict(ck_best["encoder"])  # Should not raise
