@@ -38,3 +38,49 @@ def test_table_has_one_row_per_run(finished_run):
     run_dir, _ = finished_run
     text = report.table([report.summarize(run_dir)])
     assert text.count("\n") == 2 and "tiny" in text
+
+
+def test_summarize_survives_a_truncated_metrics_line(finished_run):
+    run_dir, _ = finished_run
+    # Get baseline values before truncation
+    baseline = report.summarize(run_dir)
+    baseline_epochs_run = baseline["epochs_run"]
+    baseline_best_epoch = baseline["best_epoch"]
+
+    # Append a truncated JSON line to metrics.jsonl
+    metrics_file = run_dir / "metrics.jsonl"
+    with open(metrics_file, "a") as f:
+        f.write('{"epoch": 9, "lo')
+
+    # Should survive and return same values
+    s = report.summarize(run_dir)
+    assert s["epochs_run"] == baseline_epochs_run
+    assert s["best_epoch"] == baseline_best_epoch
+
+
+def test_best_epoch_follows_the_improved_flag(tmp_path):
+    from pathlib import Path
+    run_dir = tmp_path / "test_run"
+    run_dir.mkdir()
+
+    # Write config.yaml
+    (run_dir / "config.yaml").write_text("preset: tiny\nseed: 0\n")
+
+    # Write manifest.json
+    manifest = {"raw_knn_score": 0.5, "encoder_params": 1}
+    (run_dir / "manifest.json").write_text(json.dumps(manifest))
+
+    # Write metrics.jsonl with loss and probe lines
+    metrics_lines = [
+        json.dumps({"epoch": 1, "loss": 0.8, "seconds": 1.0}),
+        json.dumps({"epoch": 2, "loss": 0.7, "seconds": 1.0}),
+        json.dumps({"epoch": 1, "probe": {"probe_score": 0.6, "knn_score": 0.55, "logreg_score": 0.58,
+                                           "per_task": {}, "rankme": 1.0, "source_id_bacc": 0.5}, "improved": True}),
+        json.dumps({"epoch": 2, "probe": {"probe_score": 0.60005, "knn_score": 0.55005, "logreg_score": 0.58005,
+                                           "per_task": {}, "rankme": 1.0, "source_id_bacc": 0.5}, "improved": False}),
+    ]
+    (run_dir / "metrics.jsonl").write_text("\n".join(metrics_lines))
+
+    # Summarize should pick epoch 1 (the last improved=true)
+    s = report.summarize(run_dir)
+    assert s["best_epoch"] == 1

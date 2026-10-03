@@ -36,7 +36,12 @@ TIE = 0.01
 def read_metrics(run_dir):
     epochs, probes, end = [], [], None
     for line in (Path(run_dir) / "metrics.jsonl").read_text().splitlines():
-        rec = json.loads(line)
+        if not line.strip():  # Skip blank lines
+            continue
+        try:
+            rec = json.loads(line)
+        except json.JSONDecodeError:
+            continue  # Skip lines that can't be parsed (e.g., truncated)
         if "loss" in rec:
             epochs.append(rec)
         elif "probe" in rec:
@@ -51,7 +56,14 @@ def summarize(run_dir):
     cfg = yaml.safe_load((run_dir / "config.yaml").read_text())
     manifest = json.loads((run_dir / "manifest.json").read_text())
     epochs, probes, end = read_metrics(run_dir)
-    best = max(probes, key=lambda p: p["probe"]["probe_score"]) if probes else None
+    # Best epoch: last probe with "improved": true, or max probe_score if none
+    best = None
+    for p in reversed(probes):
+        if p.get("improved", False):
+            best = p
+            break
+    if best is None and probes:
+        best = max(probes, key=lambda p: p["probe"]["probe_score"])
     bp = best["probe"] if best else {}
     raw = manifest["raw_knn_score"]
     return {
@@ -124,10 +136,12 @@ def plot_recon(npz_path, out, n=4):
 
 
 def plot_embedding(run_dir, corpus, out, device):
+    cfg = yaml.safe_load((Path(run_dir) / "config.yaml").read_text())
+    seed = cfg.get("seed", 0)
     ck = torch.load(Path(run_dir) / "ckpt_best.pt", map_location=device, weights_only=True)
     enc = SpectralEncoder(PRESETS[ck["preset"]]).to(device)
     enc.load_state_dict(ck["encoder"])
-    ps = build_probe_set(corpus.meta)
+    ps = build_probe_set(corpus.meta, seed=seed)
     emb = embed(enc, corpus.X, corpus.M, ps.sample_idx, device)
     emb = emb - emb.mean(axis=0)
     xy = emb @ np.linalg.svd(emb, full_matrices=False)[2][:2].T
