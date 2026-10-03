@@ -104,7 +104,7 @@ def plot_curves(run_dir, out):
     ax[1].set(title="probe macro-F1", xlabel="epoch", ylim=(0, 1))
     ax[1].legend(fontsize=8)
     ax[2].plot(pe, [p["probe"]["rankme"] for p in probes], marker="o", c="tab:green")
-    ax[2].set(title="RankMe (green) / source-ID bacc (red)", xlabel="epoch")
+    ax[2].set(title="RankMe (centred) green / source-ID bacc red", xlabel="epoch")
     tw = ax[2].twinx()
     tw.plot(pe, [p["probe"]["source_id_bacc"] for p in probes], marker="s", c="tab:red")
     tw.set_ylim(0, 1)

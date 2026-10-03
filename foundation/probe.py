@@ -84,9 +84,16 @@ def logreg_f1(tr, y_tr, te, y_te):
                           labels=np.unique(y_te), zero_division=0))
 
 
-def rankme(emb, eps=1e-7):
-    """Effective rank of the embedding matrix (Garrido et al. 2023)."""
-    s = np.linalg.svd(np.asarray(emb, dtype=np.float64), compute_uv=False)
+def rankme(emb, eps=1e-7, centre=True):
+    """Effective rank of the embedding matrix (Garrido et al. 2023). Centred by
+    default: a large shared offset otherwise shows up as one huge singular value
+    and hides how many directions actually carry variation."""
+    emb = np.asarray(emb, dtype=np.float64)
+    if centre:
+        emb = emb - emb.mean(axis=0, keepdims=True)
+    s = np.linalg.svd(emb, compute_uv=False)
+    if s.sum() == 0:
+        return 0.0
     p = s / s.sum() + eps
     return float(np.exp(-(p * np.log(p)).sum()))
 
@@ -115,6 +122,7 @@ def evaluate(encoder, X, M, probe_set, device):
     lr = float(np.mean([v["logreg_f1"] for v in per_task.values()]))
     return {"probe_score": (knn + lr) / 2, "knn_score": knn, "logreg_score": lr,
             "per_task": per_task, "rankme": rankme(sample),
+            "rankme_uncentred": rankme(sample, centre=False),
             "source_id_bacc": source_id_bacc(sample, probe_set.sample_source)}
 
 

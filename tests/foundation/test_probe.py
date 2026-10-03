@@ -37,6 +37,14 @@ def test_rankme_counts_effective_dimensions():
     assert rankme(full) > 12 and rankme(collapsed) < 1.5
 
 
+def test_rankme_is_centred_by_default():
+    rng = np.random.default_rng(0)
+    shifted = rng.normal(size=(500, 16)) + 50
+    assert rankme(shifted) > 12
+    assert rankme(shifted, centre=False) < 3
+    assert rankme(np.zeros((10, 4))) == 0.0
+
+
 def test_source_id_is_nan_with_a_single_source():
     X, _ = _clusters()
     assert np.isnan(source_id_bacc(X, np.array(["a"] * len(X))))
@@ -64,7 +72,8 @@ def test_evaluate_and_raw_baseline_on_fake_corpus(fake_corpus):
     ps = build_probe_set(meta)
     enc = SpectralEncoder(PRESETS["tiny"])
     out = evaluate(enc, X, M, ps, torch.device("cpu"))
-    for key in ("probe_score", "knn_score", "logreg_score", "rankme", "source_id_bacc"):
+    for key in ("probe_score", "knn_score", "logreg_score", "rankme", "rankme_uncentred",
+                "source_id_bacc"):
         assert key in out
     assert out["probe_score"] == pytest.approx((out["knn_score"] + out["logreg_score"]) / 2)
     assert raw_knn_score(X, M, ps) > 0.9          # fake classes are easy on raw spectra
