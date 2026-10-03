@@ -256,3 +256,52 @@ def test_trim_metrics_drops_stale_probe_and_end_lines_and_bad_json(tmp_path):
     # Verify no end lines, no stale epochs, no bad JSON
     assert all("end" not in r for r in kept)
     assert all(r["epoch"] <= 2 for r in kept)
+
+
+def test_visible_tokens_do_not_see_hidden_points():
+    from foundation.model.encoder import PATCH, PRESETS, SpectralEncoder, token_validity
+    from foundation.model.masking import block_mask, visible_order
+
+    torch.manual_seed(0)
+    enc = SpectralEncoder(PRESETS["tiny"]).eval()
+    x = torch.rand(2, 1001)
+    m = torch.ones(2, 1001, dtype=torch.bool)
+    valid = token_validity(m)
+
+    def hidden_for():
+        g = torch.Generator().manual_seed(7)
+        return block_mask(valid, 0.5, 2, 6, generator=g)
+
+    hidden = hidden_for()
+    assert torch.equal(hidden, hidden_for())
+    hidden_pts = hidden.repeat_interleave(PATCH, dim=1)[:, :1001]
+    x2 = torch.where(hidden_pts, torch.rand_like(x), x)
+    assert not torch.equal(x, x2)
+    keep, keep_valid = visible_order(valid, hidden)
+
+    with torch.no_grad():
+        h1 = pt.visible_encoding(enc, x, m, hidden)[0]
+        h2 = pt.visible_encoding(enc, x2, m, hidden)[0]
+        assert torch.allclose(h1[keep_valid], h2[keep_valid], atol=1e-5)
+
+        def old(xc):                      # stem over the whole spectrum, then mask
+            tokens, _ = enc.tokenize(xc, m)
+            vis = tokens.gather(1, keep[..., None].expand(-1, -1, tokens.shape[2]))
+            return enc.encode(vis, keep_valid)
+        assert not torch.allclose(old(x)[keep_valid], old(x2)[keep_valid], atol=1e-5)
+
+
+def test_mae_forward_shapes_and_hidden_come_from_the_generator():
+    from foundation.model.decoder import MAEDecoder
+    from foundation.model.encoder import PRESETS, SpectralEncoder
+
+    torch.manual_seed(0)
+    enc = SpectralEncoder(PRESETS["tiny"]).eval()
+    dec = MAEDecoder(enc.cfg.width).eval()
+    x = torch.rand(2, 1001)
+    m = torch.ones(2, 1001, dtype=torch.bool)
+    cfg = {"mask_ratio": 0.5, "mask_block": [2, 6]}
+    out = [pt.mae_forward(enc, dec, x, m, cfg, torch.Generator().manual_seed(3)) for _ in range(2)]
+    pred, hidden, valid = out[0]
+    assert pred.shape[:2] == hidden.shape == valid.shape == (2, 101)
+    assert torch.equal(out[0][1], out[1][1])

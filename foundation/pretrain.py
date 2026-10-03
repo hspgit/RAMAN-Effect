@@ -27,7 +27,7 @@ import yaml
 from .data.corrupt import PRESETS as CORRUPTIONS
 from .data.corrupt import corrupt
 from .model.decoder import TARGET_EPS, MAEDecoder, mae_loss, patchify
-from .model.encoder import PRESETS, SpectralEncoder, count_parameters
+from .model.encoder import PATCH, PRESETS, SpectralEncoder, count_parameters, token_validity
 from .model.masking import block_mask, visible_order
 from .probe import build_probe_set, evaluate, raw_knn_score
 
@@ -138,17 +138,34 @@ def make_optimizer(cfg, enc, dec):
                              lr=cfg["lr"], betas=tuple(cfg["betas"]))
 
 
+def visible_encoding(enc, xc, mc, hidden):
+    """Encoder output for the visible tokens only. Hidden patches' points are removed
+    from the stem's input (zeroed and masked out), so no visible token carries their
+    content through the convolutions or the GroupNorm statistics (spec 5.2).
+    Returns (h, keep, keep_valid, valid)."""
+    valid = token_validity(mc)
+    hidden_pts = hidden.repeat_interleave(PATCH, dim=1)[:, :mc.shape[1]]
+    tokens, _ = enc.tokenize(xc, mc & ~hidden_pts)
+    keep, keep_valid = visible_order(valid, hidden)
+    vis = tokens.gather(1, keep[..., None].expand(-1, -1, tokens.shape[2]))
+    return enc.encode(vis, keep_valid), keep, keep_valid, valid
+
+
+def mae_forward(enc, dec, xc, mc, cfg, generator):
+    """Mask, encode the visible tokens only, decode. Returns (pred, hidden, valid)."""
+    valid = token_validity(mc)
+    hidden = block_mask(valid, cfg["mask_ratio"], *cfg["mask_block"], generator=generator)
+    h, keep, keep_valid, valid = visible_encoding(enc, xc, mc, hidden)
+    return dec(h, keep, keep_valid, valid), hidden, valid
+
+
 def train_step(cfg, enc, dec, opt, sched, scaler, corpus, gens, device):
     x, m = corpus.sample(cfg["batch_size"], gens["cpu"], device)
     with torch.no_grad():
         xc, mc = corrupt(x, m, CORRUPTIONS[cfg["corruption"]], generator=gens["dev"])
     enc.train(), dec.train()
     with torch.autocast(device.type, enabled=cfg["amp"] and device.type == "cuda"):
-        tokens, valid = enc.tokenize(xc, mc)
-        hidden = block_mask(valid, cfg["mask_ratio"], *cfg["mask_block"], generator=gens["dev"])
-        keep, keep_valid = visible_order(valid, hidden)
-        vis = tokens.gather(1, keep[..., None].expand(-1, -1, tokens.shape[2]))
-        pred = dec(enc.encode(vis, keep_valid), keep, keep_valid, valid)
+        pred, hidden, _ = mae_forward(enc, dec, xc, mc, cfg, gens["dev"])
     loss, parts = mae_loss(pred, x, m, hidden, cfg["deriv_weight"])
     opt.zero_grad(set_to_none=True)
     if not torch.isfinite(loss):
@@ -170,11 +187,8 @@ def reconstruct(enc, dec, X, M, rows, cfg, device):
     m = torch.as_tensor(np.asarray(M[rows]), device=device)
     g = torch.Generator(device=device).manual_seed(1234)
     xc, mc = corrupt(x, m, CORRUPTIONS[cfg["corruption"]], generator=g)
-    tokens, valid = enc.tokenize(xc, mc)
-    hidden = block_mask(valid, cfg["mask_ratio"], *cfg["mask_block"], generator=g)
-    keep, keep_valid = visible_order(valid, hidden)
-    vis = tokens.gather(1, keep[..., None].expand(-1, -1, tokens.shape[2]))
-    pred = dec(enc.encode(vis, keep_valid), keep, keep_valid, valid).float()
+    pred, hidden, _ = mae_forward(enc, dec, xc, mc, cfg, g)
+    pred = pred.float()
     tgt, pm = patchify(x), patchify(m.float()) > 0
     cnt = pm.sum(-1, keepdim=True).clamp_min(1)
     mean = (tgt * pm).sum(-1, keepdim=True) / cnt
