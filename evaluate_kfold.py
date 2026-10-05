@@ -43,8 +43,11 @@ def main():
         if args.model_type == 'legacy_cnn':
             from legacy_baseline.model import LegacyCNN
             return LegacyCNN(num_classes=num_classes).to(device)
+        elif args.model_type == 'rnn':
+            from src.model import RamanLSTM
+            return RamanLSTM(num_classes=num_classes).to(device)
         else:
-            raise ValueError("Only legacy_cnn supported in this quick script")
+            raise ValueError(f"Model {args.model_type} not fully supported or unknown in this quick script")
 
     model = get_model()
     criterion = nn.CrossEntropyLoss()
@@ -106,7 +109,7 @@ def main():
         scheduler_ft = optim.lr_scheduler.CosineAnnealingLR(optimizer_ft, T_max=args.finetune_epochs)
         
         best_ft_val_loss = float('inf')
-        best_ft_weights = None
+        best_ft_weights = model.state_dict()
         
         for epoch in range(1, args.finetune_epochs + 1):
             train_epoch(model, device, ft_train_loader, optimizer_ft, criterion, epoch, phase=f"Fold {fold} Finetune")

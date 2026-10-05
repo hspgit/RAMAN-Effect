@@ -41,7 +41,7 @@ def main():
                         help='disable on-the-fly data preprocessing with ramanspy')
     
     # Optional arguments to allow switching models dynamically in the future
-    parser.add_argument('--model-type', type=str, default='resnet', choices=['resnet', 'legacy_cnn', 'transformer', 'multiscale_cnn', 'fusion'],
+    parser.add_argument('--model-type', type=str, default='resnet', choices=['resnet', 'legacy_cnn', 'transformer', 'multiscale_cnn', 'fusion', 'rnn'],
                         help='type of model to use')
                         
     args = parser.parse_args()
@@ -104,6 +104,9 @@ def main():
     elif args.model_type == 'fusion':
         from src.model import FusionNet
         model = FusionNet(num_classes=num_classes).to(device)
+    elif args.model_type == 'rnn':
+        from src.model import RamanLSTM
+        model = RamanLSTM(num_classes=num_classes).to(device)
     else:
         raise ValueError(f"Unknown model type: {args.model_type}")
 
