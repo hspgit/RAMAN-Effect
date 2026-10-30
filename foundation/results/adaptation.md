@@ -128,7 +128,7 @@ One A file (19.99 MB) serves both tasks; each task stores only its add-on.
   | B2 | 1e-3, 3e-3, 1e-2 (10x B1, spec 6.1) | 1e-3 * (bottom) | 1e-3 * (bottom) |
 
 - **S also uses layer-wise LR decay 0.75** (plan D6: spec 6.1 gives S "the same schedule as B1's unfrozen phase"). This slightly favours a pretrained start; S's own LR sweep partly offsets it.
-- **T2 validation is near ceiling** (98.5–99.1% for every arm) because it is a random 10% of the 2018 data; LR choice on T2 was therefore decided mostly by validation loss (plan D2). The 2019 test set is the real measure of T2.
+- **T2 validation is near ceiling** (98.5–99.1% for every arm) because it is a random 10% of the 2018 data; the three LRs per arm were within 1.4 points of each other on T2, so those choices rest on small validation-accuracy margins (plan D2 breaks exact ties by validation loss). The 2019 test set is the real measure of T2.
 - **Q3 margin:** B2 is 1.23 points below B1 on T1, just outside the pre-registered 1.0-point margin, and the best arm on T2. Q3 is reported as FAIL as pre-registered.
 - **Curve "all" row** uses seeds 1–3 only (the curve's seeds), so it differs slightly from the 5-seed T1 table above. Curve runs reuse stage i from the full-data run (plan D11).
 - **Run integrity:** every one of the 76 scored models reproduced its own validation predictions exactly before its test predictions were made, and every run was trained on the same model A file (SHA-1 checked at scoring).
