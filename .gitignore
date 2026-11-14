@@ -46,3 +46,15 @@ __pycache__/
 # Node / JS
 node_modules/
 docs-pdf/*
+
+# Local safety backups
+backup_local_data*.tar.gz
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.log
