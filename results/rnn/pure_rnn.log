@@ -1,0 +1,172 @@
+Using device: mps
+Loading reference dataset...
+Applying RamanSPy preprocessing to data/X_reference.npy...
+Detected 30 classes.
+
+--- Starting Reference Training ---
+Pre-train Epoch: 1 [0/60000 (0%)]	Loss: 3.398559	Acc: 4.69%
+Pre-train Epoch: 1 [6400/60000 (11%)]	Loss: 3.398043	Acc: 3.20%
+Pre-train Epoch: 1 [12800/60000 (21%)]	Loss: 3.400479	Acc: 3.21%
+Pre-train Epoch: 1 [19200/60000 (32%)]	Loss: 3.404543	Acc: 3.12%
+Pre-train Epoch: 1 [25600/60000 (43%)]	Loss: 3.399708	Acc: 3.21%
+Pre-train Epoch: 1 [32000/60000 (53%)]	Loss: 3.401193	Acc: 3.20%
+Pre-train Epoch: 1 [38400/60000 (64%)]	Loss: 3.401044	Acc: 3.18%
+Pre-train Epoch: 1 [44800/60000 (75%)]	Loss: 3.404351	Acc: 3.12%
+Pre-train Epoch: 1 [51200/60000 (85%)]	Loss: 3.402460	Acc: 3.13%
+Pre-train Epoch: 1 [57600/60000 (96%)]	Loss: 3.401418	Acc: 3.10%
+Pre-train Epoch: 2 [0/60000 (0%)]	Loss: 3.401814	Acc: 3.12%
+Pre-train Epoch: 2 [6400/60000 (11%)]	Loss: 3.399082	Acc: 3.17%
+Pre-train Epoch: 2 [12800/60000 (21%)]	Loss: 3.400906	Acc: 3.37%
+Pre-train Epoch: 2 [19200/60000 (32%)]	Loss: 3.402506	Acc: 3.35%
+Pre-train Epoch: 2 [25600/60000 (43%)]	Loss: 3.399973	Acc: 3.32%
+Pre-train Epoch: 2 [32000/60000 (53%)]	Loss: 3.402603	Acc: 3.32%
+Pre-train Epoch: 2 [38400/60000 (64%)]	Loss: 3.402379	Acc: 3.34%
+Pre-train Epoch: 2 [44800/60000 (75%)]	Loss: 3.399425	Acc: 3.32%
+Pre-train Epoch: 2 [51200/60000 (85%)]	Loss: 3.401140	Acc: 3.27%
+Pre-train Epoch: 2 [57600/60000 (96%)]	Loss: 3.401101	Acc: 3.26%
+Pre-train Epoch: 3 [0/60000 (0%)]	Loss: 3.400597	Acc: 4.69%
+Pre-train Epoch: 3 [6400/60000 (11%)]	Loss: 3.402420	Acc: 3.54%
+Pre-train Epoch: 3 [12800/60000 (21%)]	Loss: 3.401217	Acc: 3.23%
+Pre-train Epoch: 3 [19200/60000 (32%)]	Loss: 3.401300	Acc: 3.36%
+Pre-train Epoch: 3 [25600/60000 (43%)]	Loss: 3.402607	Acc: 3.27%
+Pre-train Epoch: 3 [32000/60000 (53%)]	Loss: 3.400684	Acc: 3.23%
+Pre-train Epoch: 3 [38400/60000 (64%)]	Loss: 3.401531	Acc: 3.20%
+Pre-train Epoch: 3 [44800/60000 (75%)]	Loss: 3.401426	Acc: 3.16%
+Pre-train Epoch: 3 [51200/60000 (85%)]	Loss: 3.401156	Acc: 3.16%
+Pre-train Epoch: 3 [57600/60000 (96%)]	Loss: 3.402663	Acc: 3.16%
+Pre-train Epoch: 4 [0/60000 (0%)]	Loss: 3.402116	Acc: 4.69%
+Pre-train Epoch: 4 [6400/60000 (11%)]	Loss: 3.402720	Acc: 2.99%
+Pre-train Epoch: 4 [12800/60000 (21%)]	Loss: 3.401502	Acc: 3.06%
+Pre-train Epoch: 4 [19200/60000 (32%)]	Loss: 3.402833	Acc: 3.14%
+Pre-train Epoch: 4 [25600/60000 (43%)]	Loss: 3.400044	Acc: 3.11%
+Pre-train Epoch: 4 [32000/60000 (53%)]	Loss: 3.398659	Acc: 3.15%
+Pre-train Epoch: 4 [38400/60000 (64%)]	Loss: 3.402219	Acc: 3.16%
+Pre-train Epoch: 4 [44800/60000 (75%)]	Loss: 3.401574	Acc: 3.14%
+Pre-train Epoch: 4 [51200/60000 (85%)]	Loss: 3.399673	Acc: 3.16%
+Pre-train Epoch: 4 [57600/60000 (96%)]	Loss: 3.401379	Acc: 3.15%
+Pre-train Epoch: 5 [0/60000 (0%)]	Loss: 3.399188	Acc: 7.81%
+Pre-train Epoch: 5 [6400/60000 (11%)]	Loss: 3.403002	Acc: 3.71%
+Pre-train Epoch: 5 [12800/60000 (21%)]	Loss: 3.401593	Acc: 3.55%
+Pre-train Epoch: 5 [19200/60000 (32%)]	Loss: 3.397693	Acc: 3.43%
+Pre-train Epoch: 5 [25600/60000 (43%)]	Loss: 3.400299	Acc: 3.33%
+Pre-train Epoch: 5 [32000/60000 (53%)]	Loss: 3.401240	Acc: 3.31%
+Pre-train Epoch: 5 [38400/60000 (64%)]	Loss: 3.404050	Acc: 3.28%
+Pre-train Epoch: 5 [44800/60000 (75%)]	Loss: 3.401993	Acc: 3.22%
+Pre-train Epoch: 5 [51200/60000 (85%)]	Loss: 3.401226	Acc: 3.24%
+Pre-train Epoch: 5 [57600/60000 (96%)]	Loss: 3.401018	Acc: 3.23%
+Pre-train Epoch: 6 [0/60000 (0%)]	Loss: 3.402120	Acc: 3.12%
+Pre-train Epoch: 6 [6400/60000 (11%)]	Loss: 3.401416	Acc: 3.11%
+Pre-train Epoch: 6 [12800/60000 (21%)]	Loss: 3.399149	Acc: 3.31%
+Pre-train Epoch: 6 [19200/60000 (32%)]	Loss: 3.402322	Acc: 3.20%
+Pre-train Epoch: 6 [25600/60000 (43%)]	Loss: 3.400755	Acc: 3.31%
+Pre-train Epoch: 6 [32000/60000 (53%)]	Loss: 3.400293	Acc: 3.29%
+Pre-train Epoch: 6 [38400/60000 (64%)]	Loss: 3.400190	Acc: 3.31%
+Pre-train Epoch: 6 [44800/60000 (75%)]	Loss: 3.403634	Acc: 3.32%
+Pre-train Epoch: 6 [51200/60000 (85%)]	Loss: 3.402619	Acc: 3.27%
+Pre-train Epoch: 6 [57600/60000 (96%)]	Loss: 3.402291	Acc: 3.26%
+Pre-train Epoch: 7 [0/60000 (0%)]	Loss: 3.400897	Acc: 1.56%
+Pre-train Epoch: 7 [6400/60000 (11%)]	Loss: 3.401159	Acc: 3.22%
+Pre-train Epoch: 7 [12800/60000 (21%)]	Loss: 3.401529	Acc: 3.30%
+Pre-train Epoch: 7 [19200/60000 (32%)]	Loss: 3.403509	Acc: 3.18%
+Pre-train Epoch: 7 [25600/60000 (43%)]	Loss: 3.400350	Acc: 3.08%
+Pre-train Epoch: 7 [32000/60000 (53%)]	Loss: 3.401707	Acc: 3.11%
+Pre-train Epoch: 7 [38400/60000 (64%)]	Loss: 3.402356	Acc: 3.14%
+Pre-train Epoch: 7 [44800/60000 (75%)]	Loss: 3.401998	Acc: 3.18%
+Pre-train Epoch: 7 [51200/60000 (85%)]	Loss: 3.401968	Acc: 3.17%
+Pre-train Epoch: 7 [57600/60000 (96%)]	Loss: 3.402058	Acc: 3.15%
+Pre-train Epoch: 8 [0/60000 (0%)]	Loss: 3.401605	Acc: 3.12%
+Pre-train Epoch: 8 [6400/60000 (11%)]	Loss: 3.400951	Acc: 3.28%
+Pre-train Epoch: 8 [12800/60000 (21%)]	Loss: 3.400345	Acc: 3.18%
+Pre-train Epoch: 8 [19200/60000 (32%)]	Loss: 3.400040	Acc: 3.22%
+Pre-train Epoch: 8 [25600/60000 (43%)]	Loss: 3.401128	Acc: 3.16%
+Pre-train Epoch: 8 [32000/60000 (53%)]	Loss: 3.400477	Acc: 3.19%
+Pre-train Epoch: 8 [38400/60000 (64%)]	Loss: 3.401978	Acc: 3.17%
+Pre-train Epoch: 8 [44800/60000 (75%)]	Loss: 3.401377	Acc: 3.11%
+Pre-train Epoch: 8 [51200/60000 (85%)]	Loss: 3.401249	Acc: 3.11%
+Pre-train Epoch: 8 [57600/60000 (96%)]	Loss: 3.400450	Acc: 3.09%
+Pre-train Epoch: 9 [0/60000 (0%)]	Loss: 3.401268	Acc: 4.69%
+Pre-train Epoch: 9 [6400/60000 (11%)]	Loss: 3.402080	Acc: 3.14%
+Pre-train Epoch: 9 [12800/60000 (21%)]	Loss: 3.399960	Acc: 3.21%
+Pre-train Epoch: 9 [19200/60000 (32%)]	Loss: 3.402071	Acc: 3.21%
+Pre-train Epoch: 9 [25600/60000 (43%)]	Loss: 3.401224	Acc: 3.19%
+Pre-train Epoch: 9 [32000/60000 (53%)]	Loss: 3.401640	Acc: 3.25%
+Pre-train Epoch: 9 [38400/60000 (64%)]	Loss: 3.402005	Acc: 3.18%
+Pre-train Epoch: 9 [44800/60000 (75%)]	Loss: 3.401327	Acc: 3.20%
+Pre-train Epoch: 9 [51200/60000 (85%)]	Loss: 3.400929	Acc: 3.18%
+Pre-train Epoch: 9 [57600/60000 (96%)]	Loss: 3.401141	Acc: 3.19%
+Pre-train Epoch: 10 [0/60000 (0%)]	Loss: 3.401101	Acc: 7.81%
+Pre-train Epoch: 10 [6400/60000 (11%)]	Loss: 3.401849	Acc: 2.80%
+Pre-train Epoch: 10 [12800/60000 (21%)]	Loss: 3.402158	Acc: 3.02%
+Pre-train Epoch: 10 [19200/60000 (32%)]	Loss: 3.401315	Acc: 3.07%
+Pre-train Epoch: 10 [25600/60000 (43%)]	Loss: 3.401351	Acc: 3.15%
+Pre-train Epoch: 10 [32000/60000 (53%)]	Loss: 3.400753	Acc: 3.14%
+Pre-train Epoch: 10 [38400/60000 (64%)]	Loss: 3.400860	Acc: 3.09%
+Pre-train Epoch: 10 [44800/60000 (75%)]	Loss: 3.401231	Acc: 3.07%
+Pre-train Epoch: 10 [51200/60000 (85%)]	Loss: 3.401780	Acc: 3.09%
+Pre-train Epoch: 10 [57600/60000 (96%)]	Loss: 3.401369	Acc: 3.10%
+Pre-train Epoch: 11 [0/60000 (0%)]	Loss: 3.401033	Acc: 3.12%
+Pre-train Epoch: 11 [6400/60000 (11%)]	Loss: 3.402109	Acc: 3.23%
+Pre-train Epoch: 11 [12800/60000 (21%)]	Loss: 3.401498	Acc: 3.23%
+Pre-train Epoch: 11 [19200/60000 (32%)]	Loss: 3.400466	Acc: 3.30%
+Pre-train Epoch: 11 [25600/60000 (43%)]	Loss: 3.402563	Acc: 3.33%
+Pre-train Epoch: 11 [32000/60000 (53%)]	Loss: 3.400901	Acc: 3.28%
+Pre-train Epoch: 11 [38400/60000 (64%)]	Loss: 3.400742	Acc: 3.23%
+Pre-train Epoch: 11 [44800/60000 (75%)]	Loss: 3.400979	Acc: 3.24%
+Pre-train Epoch: 11 [51200/60000 (85%)]	Loss: 3.400793	Acc: 3.24%
+Pre-train Epoch: 11 [57600/60000 (96%)]	Loss: 3.401055	Acc: 3.20%
+Pre-train Epoch: 12 [0/60000 (0%)]	Loss: 3.401039	Acc: 4.69%
+Pre-train Epoch: 12 [6400/60000 (11%)]	Loss: 3.400947	Acc: 3.03%
+Pre-train Epoch: 12 [12800/60000 (21%)]	Loss: 3.400961	Acc: 3.09%
+Pre-train Epoch: 12 [19200/60000 (32%)]	Loss: 3.401492	Acc: 3.36%
+Pre-train Epoch: 12 [25600/60000 (43%)]	Loss: 3.400853	Acc: 3.32%
+Pre-train Epoch: 12 [32000/60000 (53%)]	Loss: 3.401826	Acc: 3.28%
+Pre-train Epoch: 12 [38400/60000 (64%)]	Loss: 3.400967	Acc: 3.21%
+Pre-train Epoch: 12 [44800/60000 (75%)]	Loss: 3.401043	Acc: 3.16%
+Pre-train Epoch: 12 [51200/60000 (85%)]	Loss: 3.401005	Acc: 3.17%
+Pre-train Epoch: 12 [57600/60000 (96%)]	Loss: 3.401138	Acc: 3.13%
+Pre-train Epoch: 13 [0/60000 (0%)]	Loss: 3.401410	Acc: 6.25%
+Pre-train Epoch: 13 [6400/60000 (11%)]	Loss: 3.401166	Acc: 3.20%
+Pre-train Epoch: 13 [12800/60000 (21%)]	Loss: 3.400905	Acc: 3.35%
+Pre-train Epoch: 13 [19200/60000 (32%)]	Loss: 3.401267	Acc: 3.42%
+Pre-train Epoch: 13 [25600/60000 (43%)]	Loss: 3.401474	Acc: 3.43%
+Pre-train Epoch: 13 [32000/60000 (53%)]	Loss: 3.401424	Acc: 3.37%
+Pre-train Epoch: 13 [38400/60000 (64%)]	Loss: 3.400833	Acc: 3.34%
+Pre-train Epoch: 13 [44800/60000 (75%)]	Loss: 3.401381	Acc: 3.30%
+Pre-train Epoch: 13 [51200/60000 (85%)]	Loss: 3.401109	Acc: 3.29%
+Pre-train Epoch: 13 [57600/60000 (96%)]	Loss: 3.401542	Acc: 3.27%
+Pre-train Epoch: 14 [0/60000 (0%)]	Loss: 3.401053	Acc: 6.25%
+Pre-train Epoch: 14 [6400/60000 (11%)]	Loss: 3.401120	Acc: 3.88%
+Pre-train Epoch: 14 [12800/60000 (21%)]	Loss: 3.401225	Acc: 3.38%
+Pre-train Epoch: 14 [19200/60000 (32%)]	Loss: 3.401175	Acc: 3.33%
+Pre-train Epoch: 14 [25600/60000 (43%)]	Loss: 3.401244	Acc: 3.26%
+Pre-train Epoch: 14 [32000/60000 (53%)]	Loss: 3.401302	Acc: 3.26%
+Pre-train Epoch: 14 [38400/60000 (64%)]	Loss: 3.401263	Acc: 3.26%
+Pre-train Epoch: 14 [44800/60000 (75%)]	Loss: 3.401632	Acc: 3.31%
+Pre-train Epoch: 14 [51200/60000 (85%)]	Loss: 3.401164	Acc: 3.30%
+Pre-train Epoch: 14 [57600/60000 (96%)]	Loss: 3.401339	Acc: 3.29%
+Pre-train Epoch: 15 [0/60000 (0%)]	Loss: 3.401439	Acc: 3.12%
+Pre-train Epoch: 15 [6400/60000 (11%)]	Loss: 3.401239	Acc: 3.47%
+Pre-train Epoch: 15 [12800/60000 (21%)]	Loss: 3.401416	Acc: 3.45%
+Pre-train Epoch: 15 [19200/60000 (32%)]	Loss: 3.401034	Acc: 3.29%
+Pre-train Epoch: 15 [25600/60000 (43%)]	Loss: 3.401158	Acc: 3.28%
+Pre-train Epoch: 15 [32000/60000 (53%)]	Loss: 3.401162	Acc: 3.32%
+Pre-train Epoch: 15 [38400/60000 (64%)]	Loss: 3.401294	Acc: 3.27%
+Pre-train Epoch: 15 [44800/60000 (75%)]	Loss: 3.401014	Acc: 3.30%
+Pre-train Epoch: 15 [51200/60000 (85%)]	Loss: 3.401230	Acc: 3.31%
+Pre-train Epoch: 15 [57600/60000 (96%)]	Loss: 3.401143	Acc: 3.33%
+Reference model saved to models/raman_reference_model.pth
+
+--- Starting Finetuning ---
+Applying RamanSPy preprocessing to data/X_finetune.npy...
+Finetune Epoch: 1 [0/3000 (0%)]	Loss: 3.401044	Acc: 4.69%
+Finetune Epoch: 2 [0/3000 (0%)]	Loss: 3.401265	Acc: 3.12%
+Finetune Epoch: 3 [0/3000 (0%)]	Loss: 3.401291	Acc: 3.12%
+Finetune Epoch: 4 [0/3000 (0%)]	Loss: 3.401168	Acc: 1.56%
+Finetune Epoch: 5 [0/3000 (0%)]	Loss: 3.401114	Acc: 4.69%
+Finetuned model saved to models/raman_finetuned_model.pth
+
+--- Evaluating on Test Set ---
+Applying RamanSPy preprocessing to data/X_test.npy...
+
+Test set: Average loss: 3.4012, Accuracy: 100/3000 (3.33%)
+
