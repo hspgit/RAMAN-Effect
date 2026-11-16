@@ -134,13 +134,13 @@ networks, bacterial identification, antimicrobial resistance, benchmark.
 \IEEEPARstart{R}{aman} spectroscopy is a powerful, label-free analytical
 technique that enables the characterization of the chemical composition and
 molecular structure of materials through their vibrational
-properties~\cite{smith2013modern}. The technique is based on the Raman
+properties~\cite{smith2019modern}. The technique is based on the Raman
 scattering effect, an inelastic light-scattering phenomenon that occurs when
 incident photons interact with molecular bonds and exchange energy with
 molecular vibrations. When a sample is illuminated with monochromatic light,
 typically from a laser source, the majority of scattered photons undergo
 elastic scattering (Rayleigh scattering), retaining the same energy as the
-incident photons~\cite{rostron2016raman}. A small fraction of photons
+incident photons~\cite{smith2019modern}. A small fraction of photons
 undergoes inelastic scattering, resulting in an energy shift that corresponds
 to the vibrational modes of the molecules within the sample. The energy shifts
 are measured and represented as a Raman spectrum, in which the intensity of
@@ -148,7 +148,7 @@ scattered light is plotted as a function of Raman shift (\wn). Because
 different molecular bonds and chemical species exhibit characteristic
 vibrational signatures, Raman spectra provide a biochemical fingerprint that
 can be used to identify and characterize the molecular composition of a
-sample~\cite{smith2013modern}.
+sample~\cite{smith2019modern}.
 
 An important characteristic of Raman spectroscopy is its ability to provide
 detailed molecular information without requiring extensive sample
@@ -161,7 +161,7 @@ detecting molecular signatures associated with cellular components such as
 proteins, lipids, nucleic acids, and carbohydrates. This capability is
 particularly valuable when studying cellular populations in which individual
 cells may exhibit distinct biochemical characteristics that are not readily
-captured through bulk measurements~\cite{smith2013modern}.
+captured through bulk measurements~\cite{zhang2024genotype}.
 
 Despite these advantages, several analytical challenges limit the broader
 application of Raman spectroscopy, particularly in biological samples and
@@ -177,7 +177,7 @@ features of interest to be difficult to distinguish from background signals,
 fluorescence contributions, and instrumental noise. This becomes especially
 problematic in single-cell Raman spectroscopy, where the small sample volume
 and limited number of molecules available for detection can further constrain
-the strength of the measured signal~\cite{smith2013modern}.
+the strength of the measured signal~\cite{zhang2024genotype}.
 
 Beyond the challenges associated with weak signal intensity, interpreting
 Raman spectra from complex biological mixtures presents a significant
@@ -194,12 +194,12 @@ can obscure diagnostically relevant spectral information and reduce the
 reliability of conventional spectral interpretation methods. As a result,
 extracting meaningful biochemical information and accurately distinguishing
 between different cell types or cellular states can be particularly
-challenging~\cite{smith2013modern}.
+challenging~\cite{zhang2024genotype}.
 
 Traditionally, Raman spectral analysis has relied on a combination of
 preprocessing techniques and chemometric methods to improve data quality and
 facilitate the identification of relevant spectral
-features~\cite{yi2025surface}. These preprocessing approaches include baseline
+features~\cite{lussier2020deep,pan2021review}. These preprocessing approaches include baseline
 correction, smoothing, normalization, and noise reduction, while multivariate
 statistical methods such as principal component analysis (PCA) and partial
 least squares discriminant analysis (PLS-DA) have been widely used for
@@ -236,18 +236,18 @@ peaks and broader spectral relationships, without requiring extensive manual
 feature engineering. The performance of conventional CNN architectures
 depends on network depth and the ability to effectively preserve relevant
 information as spectral data are transformed through successive
-layers~\cite{zhang2024genotype}.
+layers~\cite{zhao2023conincedeep}.
 
 Residual neural networks (ResNets) provide an alternative architecture
 designed to facilitate the training of deeper neural networks through the
 incorporation of residual connections, which allow information to bypass one
-or more convolutional layers~\cite{luo2022deep}. These connections lessen
+or more convolutional layers~\cite{he2016deep}. These connections lessen
 optimization difficulties associated with increasing network depth and enable
 the network to learn residual mappings rather than requiring every layer to
 learn an entirely new representation. In the context of Raman spectroscopy,
 residual connections may provide an advantage by facilitating the extraction
 of complex spectral features while preserving information from earlier network
-layers~\cite{luo2022deep}. This may be particularly relevant when analyzing
+layers~\cite{he2016deep,luo2022deep}. This may be particularly relevant when analyzing
 low-SNR spectra, where subtle biochemical information could otherwise become
 difficult to retain during successive network transformations.
 
@@ -279,8 +279,8 @@ following contributions:
         acquisition time regimes (\sunit{1} $\rightarrow$ \sunit{2}) via
         fine-tuning.
   \item \textbf{Ablation of Chemometric Pre-processing:} We show that classical
-        pre-processing pipelines (cosmic ray despiking, Savitzky--Golay
-        smoothing, ASPLS baseline subtraction) actually degrade neural network
+        pre-processing pipelines (cosmic ray despiking \cite{whitaker2018simple}, Savitzky--Golay
+        smoothing \cite{savitzky1964smoothing}, ASPLS baseline subtraction \cite{zhang2020baseline}) actually degrade neural network
         accuracy by stripping narrow diagnostic vibrational peaks, whereas
         end-to-end learning directly on raw spectra yields superior performance
         (\cref{app:preproc}).
@@ -349,8 +349,8 @@ to $[0,1]$ by the dataset authors \cite{ho2019rapid}; we apply no further
 denoising or baseline steps.
 As demonstrated in our ablation experiments (detailed in \cref{app:preproc}),
 introducing additional chemometric pre-processing steps---such as
-Whitaker--Hayes despiking, Savitzky--Golay polynomial smoothing, or
-asymmetric least squares (AsLS/ASPLS) baseline correction---degrades Plain CNN
+Whitaker--Hayes despiking \cite{whitaker2018simple}, Savitzky--Golay polynomial smoothing \cite{savitzky1964smoothing}, or
+asymmetric least squares (AsLS/ASPLS) baseline correction \cite{zhang2020baseline}---degrades Plain CNN
 test accuracy from 85.30\% down to 76.50\%. End-to-end convolutional layers learn
 matched filtering directly from the raw spectra, whereas polynomial smoothing
 attenuates critical, narrow diagnostic vibrational bands.
@@ -432,7 +432,7 @@ bound on the region that effectively influences a unit
 \subsection{Plain 1D CNN}
 \label{sec:models-cnn}
 The plain CNN is a PyTorch \cite{paszke2019pytorch} port of the six-layer
-Keras CNN used in our group's earlier work, a conventional stack of
+Keras \cite{chollet2015keras} CNN used in our group's earlier work, a conventional stack of
 convolution and pooling layers \cite{lecun1998gradient} of the type applied
 to spectra in \cite{acquarelli2017convolutional,liu2017deep}. Each of its
 six blocks (\cref{fig:blocks}(b)) applies a kernel-3 convolution with
@@ -733,11 +733,11 @@ selected on it \cite{dietterich1998approximate}.
 2 and 3, which seed the Python, NumPy \cite{harris2020array} and PyTorch
 \cite{paszke2019pytorch} generators, the reference split and the data
 loaders; cuDNN runs in deterministic mode with benchmarking disabled
-\cite{paszke2019pytorch}. All reported runs used one GPU
+\cite{pytorch_reproducibility}. All reported runs used one GPU
 (\cref{sec:models-hardware}) with Python~3.12.10,
 PyTorch~2.11.0+cu128 \cite{paszke2019pytorch},
-NumPy~2.5.2 \cite{harris2020array} and RamanSPy~0.2.10
-\cite{georgiev2024ramanspy}. The run manifests record that one run
+NumPy~2.5.2 \cite{harris2020array}, SciPy~1.18.1 \cite{virtanen2020scipy}
+and RamanSPy~0.2.10 \cite{georgiev2024ramanspy}. The run manifests record that one run
 (pre-training, fine-tuning and test) took 9.7, 25.8 and 23.3\,min for the
 ResNet and 8.2, 14.5 and 14.6\,min for the plain CNN (seeds 1--3) on this
 GPU.
@@ -817,7 +817,7 @@ mean of the 30 per-class F1 scores), per-class precision and recall, and the
 confusion matrix with NumPy \cite{harris2020array}. For each seed, the two
 networks are compared with McNemar's test on per-spectrum correctness over
 the same 3{,}000 test spectra \cite{mcnemar1947note,dietterich1998approximate},
-using Edwards' continuity correction \cite{edwards1948note}:
+using Edwards' continuity correction \cite{edwards1948note} implemented with SciPy \cite{virtanen2020scipy}:
 \begin{equation}
   \chi^2 = \frac{(\lvert b-c\rvert-1)^2}{b+c},
   \label{eq:mcnemar}
@@ -906,14 +906,14 @@ between methicillin-susceptible (\textit{MSSA}~1--3) and methicillin-resistant
 (\textit{MRSA}~1--2) strains, particularly between \textit{MSSA}~3 and the
 isogenic \textit{MRSA}~1 strain. Because \textit{MRSA}~1 differs from its
 parental background almost exclusively by the acquired cassette carrying the
-\textit{mecA} determinant, whole-cell Raman spectra at \sunit{1} exposure
+\textit{mecA} determinant \cite{ho2019rapid,peacock2015mechanisms}, whole-cell Raman spectra at \sunit{1} exposure
 share nearly identical vibrational profiles.
 
 In contrast, phylogenetically distant organisms are separated with high
 fidelity: fungal isolates (\textit{Candida albicans} and \textit{Candida glabrata},
 Group~7) and \textit{Enterococcus faecium} (Group~6) reach 98.0--100.0\%
 accuracy in both networks, owing to distinct cell-wall components (such as fungal
-$\beta$-glucans and chitin) that produce conspicuous vibrational bands. Overall,
+$\beta$-glucans and chitin) that produce conspicuous vibrational bands \cite{movasaghi2007raman}. Overall,
 the plain CNN maintains tighter diagonal concentration across the
 \textit{Enterobacterales} and streptococci, reflecting the benefit of its
 broader receptive field (971 vs.\ 435 points) and average pooling in preserving
@@ -923,7 +923,7 @@ low-frequency envelope features.
 \label{sec:res-treatment}
 In urgent clinical scenarios such as acute bacteremia or septic shock,
 clinicians must initiate empiric antimicrobial therapy long before species-level
-culture and automated susceptibility testing complete (typically 24--72\,h).
+culture and automated susceptibility testing complete (typically 24--72\,h) \cite{ho2019rapid}.
 To evaluate real-world clinical decision utility, predictions over the
 30 isolates are mapped post-hoc to the eight standard empiric-treatment
 groups defined by Ho~\textit{et al.}~\cite{ho2019rapid}
@@ -969,7 +969,7 @@ cell counts, Ho~\textit{et al.}~\cite{ho2019rapid} showed that a 10-cell
 bootstrapped majority vote across spectra from the same patient sample lifts
 treatment-level identification to 99.0\%. This protocol assumes a monomicrobial
 patient block, which aligns with standard clinical bacteremia where polymicrobial
-infections account for less than 10\% of acute cases.
+infections account for less than 10\% of acute cases \cite{weinstein1997clinical}.
 
 \subsection{Binary drug resistance (MRSA vs.\ MSSA)}
 \label{sec:res-mrsa}
@@ -986,7 +986,7 @@ while the 1D ResNet achieves 0.924 (compared to 0.953 for the reference ResNet-2
 \cite{ho2019rapid}). The high discriminative power confirms that 1D convolutional
 feature extractors detect the minute spectroscopic shifts associated with
 \textit{mecA}-encoded penicillin-binding protein 2a (PBP2a) expression and the
-resulting alterations in peptidoglycan cross-linking. The slight advantage of
+resulting alterations in peptidoglycan cross-linking \cite{peacock2015mechanisms}. The slight advantage of
 the plain CNN suggests that the multi-scale pooling stages preserve the broad
 envelope differences between resistant and susceptible cell walls without
 overfitting the high-frequency measurement noise.
@@ -1098,7 +1098,7 @@ and relative intensities correspond directly to discrete functional group vibrat
 (e.g., C--C skeletal stretching, nucleic acid ring modes, and protein amide bands)
 \cite{ho2019rapid}. High hierarchical depth is neither biochemically motivated nor
 statistically advantageous. At shallow-to-moderate depths (6--17 layers), standard
-batch normalisation \cite{ioffe2015batch} and modern weight initialisation are fully
+batch normalisation \cite{ioffe2015batch} and modern weight initialisation \cite{he2015delving} are fully
 sufficient to preserve gradient flow, rendering shortcut paths largely superfluous.
 
 Furthermore, deep residual stacks introduce substantial excess capacity: the 1D
@@ -1122,7 +1122,7 @@ CNN combines five stages of kernel-3 average pooling (stride 3), yielding a
 In Raman diagnostics, differentiating closely related species often depends on
 correlated shifts across widely separated spectral bands---for example, comparing
 the phenylalanine breathing band at $\sim$1003\wn\ with the amide~I vibrational
-envelope at $\sim$1650\wn. A global receptive field enables the network's later
+envelope at $\sim$1650\wn\ \cite{movasaghi2007raman}. A global receptive field enables the network's later
 convolutions to synthesize cross-band co-occurrences in a single forward pass.
 Moreover, fixed average pooling operations act as inductive low-pass filters that
 integrate signal energy over 3-pixel intervals, effectively smoothing uncorrelated
@@ -1209,12 +1209,12 @@ multi-stage pre-processing pipeline to remove cosmic ray artifacts, correct
 broad autofluorescent baselines, and reduce instrumental high-frequency noise.
 A canonical spectroscopic pipeline comprises:
 \begin{enumerate}
-  \item \textbf{Despiking:} Whitaker--Hayes algorithm to identify and eliminate
+  \item \textbf{Despiking:} Whitaker--Hayes algorithm \cite{whitaker2018simple} to identify and eliminate
         narrow, sharp cosmic ray spikes;
-  \item \textbf{Denoising / Smoothing:} Savitzky--Golay polynomial filtering
+  \item \textbf{Denoising / Smoothing:} Savitzky--Golay polynomial filtering \cite{savitzky1964smoothing}
         (window length $w=9$, polynomial order $p=3$);
   \item \textbf{Baseline Correction:} Asymmetric least squares smoothing
-        (AsLS/ASPLS) to subtract non-linear background fluorescence;
+        (AsLS/ASPLS) \cite{zhang2020baseline} to subtract non-linear background fluorescence;
   \item \textbf{Normalisation:} Channel-wise min--max normalisation to $[0, 1]$.
 \end{enumerate}
 
