@@ -43,12 +43,11 @@ In this work, we conduct a strictly controlled empirical benchmark comparing **1
 ```
 .
 ├── paper/
-│   ├── overleaf/              # Complete 14-page IEEE manuscript
+│   ├── overleaf/              # 15-page IEEE manuscript
 │   │   ├── main.tex           # LaTeX source code
 │   │   ├── main.pdf           # Compiled publication PDF
 │   │   ├── references.bib     # 47 fully verified BibTeX entries
-│   │   ├── figures/           # 9 publication-grade vector PDFs (no raster images)
-│   │   └── word-docs/         # Co-author original drafts & source text
+│   │   └── figures/           # 9 publication-grade vector PDFs (no raster images)
 │   ├── scripts/               # Publication figure generation scripts
 │   │   ├── make_fig_spectra.py           # Fig. 1: Mean spectra with characteristic bands
 │   │   ├── generate_vector_figures.py    # Fig. 5 & 9: 30-class confusion matrices & loss curves
@@ -57,33 +56,20 @@ In this work, we conduct a strictly controlled empirical benchmark comparing **1
 │   └── README.md              # Instructions for Overleaf compilation & figure reproduction
 │
 ├── src/                       # Core modeling and evaluation framework
-│   ├── model.py               # Plain CNN, 1D ResNet, Transformer, and LSTM implementations
+│   ├── model.py               # 1D ResNet, Transformer, and multi-scale architectures
 │   ├── dataset.py             # RamanDataset loader with on-the-fly augmentation & caching
 │   ├── engine.py              # Training loop with macro-F1, confusion matrix, & stats
 │   ├── repro.py               # Deterministic seed fixing (CPU, GPU, MPS)
-│   └── tools/                 # Ablation and Phase-2 experiment runners
+│   └── tools/                 # Ablation and statistical comparison runners
 │
-├── legacy_baseline/           # 6-layer Plain CNN architecture reference
-├── foundation/                # Foundation model pretraining & adaptation module (corpus v1, LoRA)
-├── docs/                      # Scientific documentation & experiment logs
-│   ├── 11_PREPROCESSING_IMPACT.md           # Pre-processing ablation analysis (Appendix A)
-│   ├── 12_ANTIBIOTIC_TREATMENT_GROUPINGS.md # 30-to-8 clinical treatment class mapping
-│   ├── 13_TREATMENT_GROUP_RESULTS.md        # Empiric grouping accuracy breakdown
-│   ├── foundation_model/      # Foundation model design specs & execution plans
-│   ├── rnn/                   # Exploratory RNN/LSTM research notes
-│   ├── sprints/               # Historical sprint logs & pre-processing visualizations
-│   └── archive/               # Project archive notes & slide decks
-│
-├── scripts/                   # Repository utility scripts
-│   ├── evaluate_changes.py    # Pipeline change evaluator
-│   ├── visualize_preprocessing.py # Preprocessing step-by-step plotter
-│   └── convert_docs_to_pdf.py # Markdown-to-PDF converter
-│
-├── literature/                # Reference literature and survey papers
-├── results/                   # Experimental logs, confusion matrices, and ablation data
-├── runs/                      # Reproducibility run manifests and per-epoch metrics
-└── tests/                     # Unit and integration test suite
+├── legacy_baseline/           # 6-layer Plain CNN architecture
+├── docs/                      # Experimental analysis & benchmark documentation
+├── scripts/                   # Utility and preprocessing visualization scripts
+├── runs/                      # Reproducibility run manifests, metrics, and predictions
+└── tests/                     # Core model unit tests
 ```
+
+> *Note: Exploratory side projects (foundation model pretraining, webapp prototype, slide decks, and historical sprint archives) are preserved on the [`future-work`](../../tree/future-work) branch.*
 
 ---
 
