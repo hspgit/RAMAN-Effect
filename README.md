@@ -20,21 +20,21 @@ In this work, we conduct a strictly controlled empirical benchmark comparing **1
 
 ### 🏆 Benchmark Highlights
 
-| Metric / Task | 1D Plain CNN (Ours) | 1D ResNet (Matched) | Reference ResNet-25 (Ho et al.) |
+| Metric / Task | 1D Plain CNN (Ours) | 1D ResNet (Ours) | Reference ResNet-25 (Ho et al.) |
 | :--- | :---: | :---: | :---: |
 | **Parameters** | **40,446** (1×) | 262,510 (6.5×) | 1,340,878 (33.1×) |
-| **Depth** | **6 layers** | 17 layers | 25 layers |
-| **30-Isolate Test Accuracy** | **83.9% ± 0.4%** | 79.6% ± 0.6% | 82.2% |
-| **Macro F1-Score** | **0.835** | 0.791 | — |
-| **8-Class Empiric Treatment Acc.** | **96.5%** | 94.8% | — |
-| **MRSA vs. MSSA ROC-AUC** | **0.941** | 0.924 | — |
-| **Noise Robustness ($\mathrm{SNR}=1$)** | **31.3%** | 24.1% | — |
-| **Fine-Tuning Domain Gain** | **+3.9%** | +2.7% | — |
+| **Main-Path Convolutions** | **6 layers** | 17 layers | 25 layers |
+| **30-Isolate Test Accuracy** | **83.9% ± 0.3%** | 79.6% ± 1.8% | 82.2% ± 0.3% |
+| **30-Isolate Macro-F1** | **83.4% ± 0.3%** | 79.2% ± 1.8% | — |
+| **8-Class Empiric Treatment Acc.** | **96.8% ± 0.1%** | 93.9% ± 1.0% | 97.0% ± 0.3% |
+| **MRSA vs. MSSA ROC-AUC** | **0.983** | 0.971 | 0.953 |
+| **Noise Robustness ($\mathrm{SNR}\approx 1.1$)** | **63.3%** | 58.7% | — |
+| **Fine-Tuning Domain Gain (2 s)** | **+15.5%** ($68.4\% \rightarrow 83.9\%$) | +17.8% ($61.7\% \rightarrow 79.6\%$) | — |
 
 ### 💡 Core Insights
 1. **Residual Shortcut Penalties**: In 1D low-SNR spectroscopy, deep residual identity shortcuts add excess network capacity that memorizes high-frequency stochastic sensor noise rather than underlying chemical bond vibrations.
-2. **Receptive Field Advantage**: The Plain CNN achieves an effective receptive field of **971 spectral points** (vs. 435 points for ResNet), enabling the model to learn long-range cross-band correlations across the entire fingerprint region ($382$--$1792\text{ cm}^{-1}$).
-3. **Pre-processing Ablation (Appendix A)**: Classical chemometric pre-processing pipelines (Whitaker--Hayes despiking, Savitzky--Golay polynomial smoothing, and ASPLS baseline correction) **reduce test accuracy from 85.3% down to 76.5%**. 1D convolutional layers act as adaptive finite-impulse response (FIR) filters; polynomial smoothing strips the narrow diagnostic vibrational shoulders that distinguish bacterial strains.
+2. **Receptive Field Advantage**: The Plain CNN achieves a theoretical receptive field of **971 spectral points** (vs. 435 points for 1D ResNet), enabling the model to learn long-range cross-band correlations across the entire fingerprint region ($382$--$1792\text{ cm}^{-1}$).
+3. **Pre-processing Ablation (Appendix A)**: Classical chemometric pre-processing pipelines (Whitaker--Hayes despiking, Savitzky--Golay polynomial smoothing, and ASPLS baseline correction) **reduce three-seed test accuracy from 83.89% ± 0.33% down to 74.78% ± 1.04%**. 1D convolutional layers act as adaptive finite-impulse response (FIR) filters; second-pass baseline subtraction and polynomial smoothing strip diagnostic vibrational bands.
 
 ---
 
@@ -45,15 +45,15 @@ In this work, we conduct a strictly controlled empirical benchmark comparing **1
 ├── paper/
 │   ├── overleaf/              # Complete 14-page IEEE manuscript
 │   │   ├── main.tex           # LaTeX source code
-│   │   ├── main.pdf           # Compiled publication PDF (592 KB)
-│   │   ├── references.bib     # 27+ fully verified BibTeX entries
+│   │   ├── main.pdf           # Compiled publication PDF
+│   │   ├── references.bib     # 47 fully verified BibTeX entries
 │   │   ├── figures/           # 9 publication-grade vector PDFs (no raster images)
 │   │   └── word-docs/         # Co-author original drafts & source text
 │   ├── scripts/               # Publication figure generation scripts
 │   │   ├── make_fig_spectra.py           # Fig. 1: Mean spectra with characteristic bands
-│   │   ├── generate_missing_figures.py   # Fig. 4 & 8: Confusion matrices & loss curves
-│   │   ├── generate_treatment_heatmaps.py# Fig. 5: 8-class empiric treatment heatmaps
-│   │   └── generate_vector_figures.py    # Fig. 6 & 7: MRSA ROC curves & SNR degradation
+│   │   ├── generate_vector_figures.py    # Fig. 5 & 9: 30-class confusion matrices & loss curves
+│   │   ├── generate_treatment_heatmaps.py# Fig. 6: 8-class empiric treatment heatmaps
+│   │   └── generate_missing_figures.py   # Fig. 7 & 8: MRSA ROC curves, SNR decay & FT gain
 │   └── README.md              # Instructions for Overleaf compilation & figure reproduction
 │
 ├── src/                       # Core modeling and evaluation framework
@@ -118,32 +118,36 @@ data/
 
 ### 3. Training the Models
 
-Train the 6-layer Plain CNN (Legacy Baseline) end-to-end:
+Train the 6-layer Plain CNN (Legacy Baseline) end-to-end across seeds 1, 2, and 3:
 ```bash
-python main.py --model-type legacy_cnn --pipeline minmax_only --epochs 100 --finetune-epochs 20 --seeds 1,2,3
+for s in 1 2 3; do
+  python main.py --model-type legacy_cnn --pipeline minmax_only --epochs 100 --finetune-epochs 20 --val-split 0.33 --augment --seed $s
+done
 ```
 
-Train the matched 1D ResNet:
+Train the matched 1D ResNet across seeds 1, 2, and 3:
 ```bash
-python main.py --model-type resnet --pipeline minmax_only --epochs 100 --finetune-epochs 20 --seeds 1,2,3
+for s in 1 2 3; do
+  python main.py --model-type resnet --pipeline minmax_only --epochs 100 --finetune-epochs 20 --val-split 0.33 --augment --seed $s
+done
 ```
 
 ### 4. Reproducing Paper Figures (100% Vector PDF)
 
-All figures in the paper can be regenerated from experimental checkpoints with:
+All figures in the paper can be regenerated from the run manifests and checkpoints with:
 
 ```bash
 # Fig. 1: Mean spectra with characteristic vibrational bands
 python paper/scripts/make_fig_spectra.py
 
-# Fig. 4 & 8: 30-class confusion matrices and training loss curves
-python paper/scripts/generate_missing_figures.py
+# Fig. 5 & 9: 30-class confusion matrices and training + validation loss curves
+python paper/scripts/generate_vector_figures.py
 
-# Fig. 5: 8-class empiric antibiotic treatment heatmaps
+# Fig. 6: 8-class empiric antibiotic treatment heatmaps
 python paper/scripts/generate_treatment_heatmaps.py
 
-# Fig. 6 & 7: MRSA vs. MSSA ROC curves, noise decay, and fine-tuning domain gain
-python paper/scripts/generate_vector_figures.py
+# Fig. 7 & 8: MRSA vs. MSSA ROC curves, noise decay, and fine-tuning domain gain
+python paper/scripts/generate_missing_figures.py
 ```
 *Generated vector PDFs are written directly to [`paper/overleaf/figures/`](paper/overleaf/figures).*
 

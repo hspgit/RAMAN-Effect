@@ -2,16 +2,8 @@
 %% Residual vs. plain 1D CNNs for low-SNR bacterial Raman spectra
 %% Full-page-width (single-column) IEEE layout (IEEEtran).
 %% Overleaf: Menu -> Compiler: pdfLaTeX, Main document: main.tex.
-%%
-%% Conventions used throughout this template
-%%   \TBD{...}   a number or claim still waiting on an experiment (red).
-%%   \NOTE{...}  a writing instruction to delete before submission (blue).
-%%   Figure captions go BELOW figures, table captions ABOVE tables (IEEE).
-%%   Every figure/table must be referenced in the text before it appears.
 %% =====================================================================
 \documentclass[journal,onecolumn]{IEEEtran}
-% For the two-column journal layout used at submission, delete ",onecolumn".
-% For a conference version use: \documentclass[conference]{IEEEtran}
 
 % ---------- Encoding, fonts, typography --------------------------------
 \usepackage[T1]{fontenc}
@@ -20,8 +12,6 @@
 
 % ---------- Maths, units, tables ---------------------------------------
 \usepackage{amsmath,amssymb}
-% Units use the two plain macros \sunit and \wn defined below, so the
-% file compiles on any TeX installation (siunitx works on Overleaf too).
 \usepackage{booktabs}             % \toprule \midrule \bottomrule (no vertical rules)
 \usepackage{multirow}
 \usepackage{threeparttable}       % table footnotes
@@ -29,7 +19,6 @@
 % ---------- Figures ------------------------------------------------------
 \usepackage{graphicx}
 \graphicspath{{figures/}}         % \includegraphics{fig_spectra} finds figures/fig_spectra.pdf
-% IEEE asks for subfig (not subfigure/subcaption) with these options:
 \usepackage[caption=false,font=footnotesize,labelfont=rm,textfont=rm]{subfig}
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta,fit,calc}
@@ -42,24 +31,10 @@
 \crefname{figure}{Fig.}{Figs.}
 
 % ---------- Figure width that suits either layout ---------------------
-% In this single-column layout \figwidth is 60% of the page, so plots drawn
-% for a 3.5 in journal column are not blown up to full width. If you switch
-% to two columns it becomes exactly one column. Use it for normal figures;
-% use \textwidth inside figure* for page-wide ones.
 \newlength{\figwidth}
 \makeatletter
 \if@twocolumn\setlength{\figwidth}{\columnwidth}\else\setlength{\figwidth}{0.6\textwidth}\fi
 \makeatother
-
-% ---------- Drafting helpers (remove before submission) --------------
-\newcommand{\TBD}[1]{\textcolor{red}{[#1]}}
-\newcommand{\NOTE}[1]{\textcolor{blue}{\textit{[Note: #1]}}}
-% Inserts the image if it exists, otherwise a framed placeholder of the
-% same width, so the paper always compiles while figures are pending.
-\newcommand{\figorplaceholder}[3][\figwidth]{%
-  \IfFileExists{figures/#2}%
-    {\includegraphics[width=#1]{#2}}%
-    {\fbox{\parbox[c][#3][c]{\dimexpr#1-2\fboxsep-2\fboxrule}{\centering\scriptsize\ttfamily\detokenize{#2}\\(pending)}}}}
 
 % ---------- Symbols used repeatedly -----------------------------------
 \newcommand{\wn}{\,cm$^{-1}$}              % 1792.4\wn -> 1792.4 cm^-1
@@ -70,20 +45,13 @@
 %% =====================================================================
 %% 1. TITLE
 %% =====================================================================
-% Keep the title neutral until results are in. Alternative: "Evaluating 1D
-% Residual Networks versus Standard CNNs for Low-SNR Raman Spectroscopy
-% Classification". (Text placed between \title and \maketitle ends up on a
-% blank first page, so drafting notes for the title live in this comment.)
 \title{Do Residual Connections Matter? Evaluating 1D Residual Networks
 versus Plain Convolutional Networks for Low-SNR Bacterial Raman Spectroscopy}
 
 \author{Hrishikesh~Suresh~Pradhan,~Amos~Jaimes,~K.~Siddhawar,~Edward~M.~Olano,~and~Nik~Bear~Brown%
-\thanks{H.~S.~Pradhan, A.~Jaimes, K.~Siddhawar, E.~M.~Olano, and N.~B.~Brown are with Humanitarians AI.}%
-\thanks{\TBD{Funding statement.}}%
-\thanks{Manuscript received \TBD{date}.}}
+\thanks{H.~S.~Pradhan, A.~Jaimes, K.~Siddhawar, E.~M.~Olano, and N.~B.~Brown are with Humanitarians AI.}}
 
-% Running headers are upper-cased by IEEEtran, so no \TBD/\NOTE in here.
-\markboth{Journal Name,~Vol.~XX, No.~X, Month~2026}%
+\markboth{Preprint,~2026}%
 {Pradhan \MakeLowercase{\textit{et al.}}: Residual vs.\ Plain 1D CNNs for Raman Spectroscopy}
 
 \maketitle
@@ -103,20 +71,21 @@ depth, downsampling strategy or kernel size.
 spectra from 30 bacterial and yeast isolates, we conduct a controlled
 comparison between a 1D ResNet and a lightweight plain 1D CNN without
 shortcuts, matching training protocols, data splits, and physical data
-augmentations.
+augmentations across three independent random seeds.
 \emph{Results.} On 30-isolate identification, the plain CNN reaches
-83.9\% test accuracy compared to 79.6\% for the 1D ResNet (and 82.2\%
+$83.9 \pm 0.3\%$ test accuracy (macro-F1 $83.4 \pm 0.3\%$) compared to
+$79.6 \pm 1.8\%$ (macro-F1 $79.2 \pm 1.8\%$) for the 1D ResNet (and 82.2\%
 for the 25-layer reference ResNet). When grouped into eight empiric
-antibiotic treatment classes, accuracies reach 96.5\% for the plain CNN
-and 94.8\% for the ResNet, with over 80\% of isolate-level errors occurring
-between strains within the same treatment category. For binary MRSA versus
-MSSA resistance discrimination, the plain CNN achieves an ROC-AUC of 0.941
-versus 0.924 for the ResNet. Under simulated SNR degradation down to
-$\mathrm{SNR}=1$, average pooling renders the plain CNN more resilient to
-stochastic point noise.
+antibiotic treatment classes, accuracies reach $96.8 \pm 0.1\%$ for the plain CNN
+and $93.9 \pm 1.0\%$ for the ResNet, with $80.0\%$ of plain CNN isolate-level
+errors occurring between strains within the same treatment category. For binary
+MRSA versus MSSA resistance discrimination, the plain CNN achieves an ROC-AUC
+of 0.983 ($84.2 \pm 1.6\%$ binary accuracy) versus 0.971 ($79.3 \pm 3.7\%$)
+for the ResNet. Under simulated SNR degradation down to $\mathrm{SNR}\approx 1.1$,
+average pooling renders the plain CNN more resilient to stochastic point noise.
 \emph{Conclusion.} Residual connections are not required for 1D bacterial
 Raman spectra; compact plain CNNs with multi-scale pooling provide equal or
-superior diagnostic accuracy with a six-fold reduction in parameter count.
+superior diagnostic accuracy with a 6.5-fold reduction in parameter count.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -304,7 +273,6 @@ common empiric-treatment groups and are labelled by treatment group, not
 isolate. \Cref{fig:spectra} shows a single spectrum against its isolate
 mean.
 
-% ---- Example: single-column table with booktabs ----------
 \begin{table}[!t]
   \centering
   \caption{Splits of the bacteria-ID dataset used in this study.}
@@ -327,10 +295,6 @@ mean.
   \end{threeparttable}
 \end{table}
 
-% ---- Example 1: single-column vector figure (PDF from matplotlib) ---
-% Generated in the code repo by paper/scripts/make_fig_spectra.py at 3.5 in wide, so it is
-% placed at \figwidth (= \columnwidth here) with no scaling and fonts stay
-% at 7--8 pt.
 \begin{figure}[!t]
   \centering
   \includegraphics[width=\figwidth]{fig_spectra}
@@ -342,17 +306,18 @@ mean.
 
 \subsection{Pre-processing and input representation}
 Each input is a 1{,}000-point vector over 381.98--1792.4\wn
-(1.2\wn steps). The released spectra were already
+(non-uniform 1.20--1.56\wn steps, mean 1.41\wn). The released spectra were already
 baseline-corrected with an order-5 polynomial and min--max normalised
-to $[0,1]$ by the dataset authors \cite{ho2019rapid}; we apply no further
+to $[0,1]$ by the dataset authors \cite{ho2019rapid}; we apply only
+channel-wise min--max normalisation to $[0,1]$ and no further
 denoising or baseline steps.
-As demonstrated in our ablation experiments (detailed in \cref{app:preproc}),
+As demonstrated in our three-seed ablation experiments (detailed in \cref{app:preproc}),
 introducing additional chemometric pre-processing steps---such as
 Whitaker--Hayes despiking \cite{whitaker2018simple}, Savitzky--Golay polynomial smoothing \cite{savitzky1964smoothing}, or
 asymmetric least squares (AsLS/ASPLS) baseline correction \cite{zhang2020baseline}---degrades Plain CNN
-test accuracy from 85.30\% down to 76.50\%. End-to-end convolutional layers learn
-matched filtering directly from the raw spectra, whereas polynomial smoothing
-attenuates critical, narrow diagnostic vibrational bands.
+test accuracy from $83.89 \pm 0.33\%$ down to $74.78 \pm 1.04\%$. End-to-end convolutional layers learn
+matched filtering directly from the un-smoothed spectra, whereas second-pass baseline subtraction and polynomial smoothing
+attenuate diagnostic vibrational bands.
 
 SNR follows the definition of \cite{ho2019rapid}:
 \begin{equation}
@@ -364,11 +329,11 @@ where $\mathcal{W}$ is a 20-pixel window with no Raman signal.
 
 \subsection{Evaluation protocol}
 Following \cite{ho2019rapid}, every model is pre-trained on the reference
-set and then fine-tuned on the fine-tuning set. We repeat fine-tuning
-over five random 90/10 train/validation splits, select checkpoints on
-validation accuracy only, and evaluate once on the independently cultured
-test set. Each configuration is evaluated across three independent random seeds
-(seeds 1, 2, and 3). The released
+set (using a seeded 67\%/33\% train/validation split for early stopping)
+and then fine-tuned for 20 epochs on the 3{,}000-spectrum fine-tuning set
+before a single evaluation pass on the independently cultured 3{,}000-spectrum
+test set. Each configuration is trained and evaluated across three independent
+random seeds (seeds 1, 2, and 3). The released
 data carry no sample or batch IDs, so sample-level cross-validation within
 the reference set is not possible; the separately prepared test set
 provides that guarantee instead.
@@ -430,8 +395,8 @@ bound on the region that effectively influences a unit
 
 \subsection{Plain 1D CNN}
 \label{sec:models-cnn}
-The plain CNN is a PyTorch \cite{paszke2019pytorch} port of the six-layer
-Keras \cite{chollet2015keras} CNN used in our group's earlier work, a conventional stack of
+The plain CNN is a PyTorch \cite{paszke2019pytorch} port of a six-layer
+Keras \cite{chollet2015keras} CNN baseline, a conventional stack of
 convolution and pooling layers \cite{lecun1998gradient} of the type applied
 to spectra in \cite{acquarelli2017convolutional,liu2017deep}. Each of its
 six blocks (\cref{fig:blocks}(b)) applies a kernel-3 convolution with
@@ -848,52 +813,70 @@ development runs, whose logs record the MPS device.
 
 \subsection{30-isolate species classification}
 \label{sec:res-isolate}
-\Cref{tab:main} summarises test accuracy and macro-F1.
+\Cref{tab:main} summarises test accuracy, macro-F1, empiric antibiotic
+treatment accuracy, and binary MRSA vs.\ MSSA discrimination across the three
+independent random seeds. On 30-isolate identification, the plain CNN achieves
+$83.9 \pm 0.3\%$ test accuracy ($83.57\%, 84.23\%, 83.87\%$ for seeds 1--3)
+and $83.4 \pm 0.3\%$ macro-F1 ($83.15\%, 83.72\%, 83.24\%$), outperforming the
+1D ResNet at $79.6 \pm 1.8\%$ accuracy ($78.00\%, 79.17\%, 81.50\%$) and
+$79.2 \pm 1.8\%$ macro-F1 ($77.56\%, 78.97\%, 81.18\%$) as well as the
+reference ResNet-25 benchmark ($82.2 \pm 0.3\%$) \cite{ho2019rapid}.
 
-% ---- Main results table with mean $\pm$ s.d. ------------------
+Across the three paired seeds, the plain CNN outperforms the 1D ResNet by a
+mean difference of $+4.33 \pm 1.72$ percentage points, with a 95\% paired
+$t$-interval ($df=2$) of $[+0.06\%, +8.61\%]$ ($p=0.049$). Per-spectrum
+McNemar tests with Edwards' continuity correction (\cref{eq:mcnemar}) confirm
+that the plain CNN's advantage is statistically significant on every seed:
+seed~1 ($\Delta = +5.57\%$, $b=325$ plain-only correct vs.\ $c=158$ ResNet-only
+correct, $\chi^2 = 57.05$, $p = 4.2 \times 10^{-14}$),
+seed~2 ($\Delta = +5.07\%$, $b=281$, $c=129$, $\chi^2 = 55.61$,
+$p = 8.8 \times 10^{-14}$), and
+seed~3 ($\Delta = +2.37\%$, $b=236$, $c=165$, $\chi^2 = 12.22$,
+$p = 4.7 \times 10^{-4}$).
+
 \begin{table}[!t]
   \centering
-  \caption{Test-set performance. Our rows give mean $\pm$ s.d.\ over
-  three seeds, one test pass each. n.e.: not evaluated.
+  \caption{Test-set performance across clinical tasks. Our rows report mean $\pm$ s.d.\ over
+  three seeds (one test pass per seed).
   $^\dagger$As reported in \cite{ho2019rapid}.}
   \label{tab:main}
-  \begin{tabular}{@{}l c c c@{}}
+  \begin{tabular}{@{}l c c c c@{}}
     \toprule
-    Model & 30-isolate (\%) & Treatment (\%) & MRSA AUC \\
+    Model & 30-isolate Acc.\ (\%) & Macro-F1 (\%) & Treatment Acc.\ (\%) & MRSA AUC \\
     \midrule
-    LR \cite{ho2019rapid}       & 75.7 & 93.3 & -- \\
-    SVM \cite{ho2019rapid}      & 74.9 & 92.2 & -- \\
-    ResNet-25$^\dagger$ \cite{ho2019rapid} & 82.2\,$\pm$\,0.3 & 97.0\,$\pm$\,0.3 & 0.953 \\
+    LR \cite{ho2019rapid}                  & 75.7            & --              & 93.3            & -- \\
+    SVM \cite{ho2019rapid}                 & 74.9            & --              & 92.2            & -- \\
+    ResNet-25$^\dagger$ \cite{ho2019rapid} & 82.2\,$\pm$\,0.3 & --              & 97.0\,$\pm$\,0.3 & 0.953 \\
     \midrule
-    1D ResNet (ours)            & 79.6\,$\pm$\,1.8 & 94.8\,$\pm$\,0.5 & 0.924 \\
-    Plain CNN (ours)            & 83.9\,$\pm$\,0.3 & 96.5\,$\pm$\,0.2 & 0.941 \\
+    1D ResNet (ours)                       & 79.6\,$\pm$\,1.8 & 79.2\,$\pm$\,1.8 & 93.9\,$\pm$\,1.0 & 0.971 \\
+    Plain CNN (ours)                       & \textbf{83.9\,$\pm$\,0.3} & \textbf{83.4\,$\pm$\,0.3} & \textbf{96.8\,$\pm$\,0.1} & \textbf{0.983} \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-% ---- Example 3: full-width figure with two sub-figures (figure*) ---
 \begin{figure*}[!t]
   \centering
-  \subfloat[Plain CNN\label{fig:cm-plain}]{%
+  \subfloat[Plain CNN ($83.9 \pm 0.3\%$)\label{fig:cm-plain}]{%
     \includegraphics[width=0.48\textwidth]{confusion_matrix_legacy_cnn}}%
   \hfill
-  \subfloat[1D ResNet\label{fig:cm-resnet}]{%
+  \subfloat[1D ResNet ($79.6 \pm 1.8\%$)\label{fig:cm-resnet}]{%
     \includegraphics[width=0.48\textwidth]{confusion_matrix_resnet}}%
-  \caption{Test-set confusion matrices for the 30-isolate task.
+  \caption{Three-seed mean test-set confusion matrices for the 30-isolate task ($N=3{,}000$ spectra per seed, 100 per isolate).
   Both models exhibit pronounced diagonal concentration, with misclassifications
   largely confined to taxonomically adjacent strains.}
   \label{fig:cm}
 \end{figure*}
 
-\Cref{fig:cm-plain,fig:cm-resnet} display the 30-class confusion matrices
+\Cref{fig:cm-plain,fig:cm-resnet} display the three-seed mean 30-class confusion matrices
 on the independent test set ($N=3{,}000$). Both architectures exhibit strong
-diagonal dominance across the full spectrum of pathogen isolates, but their
+diagonal dominance across the full spectrum of pathogen isolates, and their
 error distributions reveal clear taxonomic clustering. Crucially, the vast
 majority of isolate-level errors occur between strains within the exact same
 taxonomic genus or empiric antibiotic treatment class:
-for the plain CNN, 80.5\% (429 of 533) of all isolate-level misclassifications
-fall within the same empiric antibiotic treatment group, and for the 1D ResNet,
-74.0\% (444 of 600) of misclassifications do so.
+pooled across the three seeds, 80.0\% (1{,}160 of 1{,}450 total misclassifications;
+$386.7$ of $483.3$ errors per seed) for the plain CNN fall within the same empiric
+antibiotic treatment group, and 69.9\% (1{,}287 of 1{,}840 total misclassifications;
+$429.0$ of $613.3$ errors per seed) do so for the 1D ResNet.
 
 The most frequent misidentifications arise among the Gram-negative
 \textit{Enterobacterales} (treatment Group~0: \textit{E.~coli}~1 and 2,
@@ -910,8 +893,8 @@ share nearly identical vibrational profiles.
 
 In contrast, phylogenetically distant organisms are separated with high
 fidelity: fungal isolates (\textit{Candida albicans} and \textit{Candida glabrata},
-Group~7) and \textit{Enterococcus faecium} (Group~6) reach 98.0--100.0\%
-accuracy in both networks, owing to distinct cell-wall components (such as fungal
+Group~7) and \textit{Enterococcus faecium} (Group~6) reach 99.2--100.0\%
+group-level accuracy across both networks, owing to distinct cell-wall components (such as fungal
 $\beta$-glucans and chitin) that produce conspicuous vibrational bands \cite{movasaghi2007raman}. Overall,
 the plain CNN maintains tighter diagonal concentration across the
 \textit{Enterobacterales} and streptococci, reflecting the benefit of its
@@ -931,37 +914,41 @@ meropenem (Group~0), ciprofloxacin (Group~1), piperacillin-tazobactam (TZP,
 Group~2), vancomycin (Group~3), ceftriaxone (Group~4), penicillin (Group~5),
 daptomycin (Group~6), and caspofungin (Group~7).
 
-% ---- Fig: 8-class treatment heatmaps ---------------------------------
 \begin{figure*}[!t]
   \centering
-  \subfloat[Plain 1D CNN (Overall: 96.53\%)\label{fig:heat-treatment-plain}]{%
+  \subfloat[Plain 1D CNN (Overall: $96.8 \pm 0.1\%$)\label{fig:heat-treatment-plain}]{%
     \includegraphics[width=0.48\textwidth]{heatmap_treatment_plain}}%
   \hfill
-  \subfloat[1D ResNet (Overall: 94.80\%)\label{fig:heat-treatment-resnet}]{%
+  \subfloat[1D ResNet (Overall: $93.9 \pm 1.0\%$)\label{fig:heat-treatment-resnet}]{%
     \includegraphics[width=0.48\textwidth]{heatmap_treatment_resnet}}%
-  \caption{Confusion heatmaps for the eight empiric antibiotic treatment groups on
+  \caption{Three-seed mean confusion heatmaps for the eight empiric antibiotic treatment groups on
   the independent test set ($N=3{,}000$). Each cell displays the row-normalized
-  accuracy (\%) with the absolute spectrum count in parentheses. Diagonal cells
+  accuracy (\%) with the three-seed mean spectrum count in parentheses. Diagonal cells
   reflect correct first-line therapy assignment, while off-diagonal elements mark
   cross-treatment errors.}
   \label{fig:heat-treatment}
 \end{figure*}
 
-\Cref{fig:heat-treatment} presents the resulting 8-class confusion heatmaps for
-both networks, and \cref{tab:main} summarizes overall performance. Collapsing
+\Cref{fig:heat-treatment} presents the resulting 8-class confusion heatmaps averaged
+across the three seeds, and \cref{tab:main} summarizes overall performance. Collapsing
 the 30 isolates into empiric treatment categories produces a substantial performance
-leap: the plain CNN increases from 83.9\% isolate accuracy to 96.53\% treatment-group
-accuracy (+12.63\%), virtually matching the reference ResNet-25 benchmark (97.0\%)
+leap: the plain CNN increases from $83.9 \pm 0.3\%$ isolate accuracy to $96.8 \pm 0.1\%$
+treatment-group accuracy (+12.9 percentage points; $96.83\%, 96.63\%, 96.87\%$ across seeds 1--3),
+virtually matching the reference ResNet-25 benchmark ($97.0 \pm 0.3\%$)
 while requiring only 6 convolutions and 40{,}446 parameters. The 1D ResNet similarly
-rises from 80.00\% to 94.80\% (+14.80\%).
+rises from $79.6 \pm 1.8\%$ to $93.9 \pm 1.0\%$ (+14.3 percentage points;
+$92.67\%, 94.53\%, 94.37\%$ across seeds 1--3).
 
-Across individual treatment classes, both models achieve 100.0\% accuracy on
-daptomycin (\textit{E.~faecium}, 100/100 spectra) and 98.0--99.5\% on caspofungin
-(\textit{Candida} yeasts, 196--199/200 spectra), demonstrating flawless separation
+Across individual treatment classes (three-seed means), the plain CNN and 1D ResNet
+achieve $100.0\%$ ($100.0/100$) and $99.7\%$ ($99.7/100$) accuracy on daptomycin
+(\textit{E.~faecium}), and $99.7\%$ ($199.3/200$) and $99.2\%$ ($198.3/200$) on
+caspofungin (\textit{Candida} yeasts), demonstrating near-flawless separation
 of fungal pathogens and vancomycin-resistant enterococci. The plain CNN achieves
-pronounced advantages in piperacillin-tazobactam (\textit{P.~aeruginosa}: 96.00\%
-vs.\ 88.00\%) and penicillin (streptococci and \textit{E.~faecalis}: 95.86\%
-vs.\ 91.29\%).
+pronounced advantages across all remaining bacterial treatment groups, including
+piperacillin-tazobactam (\textit{P.~aeruginosa}: $90.7\%$ vs.\ $83.2\%$),
+penicillin (streptococci and \textit{E.~faecalis}: $95.7\%$ vs.\ $92.0\%$),
+vancomycin (\textit{Staphylococcus} spp.: $98.1\%$ vs.\ $95.3\%$), and
+meropenem (\textit{Enterobacterales}: $96.6\%$ vs.\ $94.1\%$).
 
 For culture-free clinical translation where patient isolates may have lower
 cell counts, Ho~\textit{et al.}~\cite{ho2019rapid} showed that a 10-cell
@@ -977,25 +964,30 @@ stewardship, particularly for distinguishing methicillin-resistant
 \textit{Staphylococcus aureus} (MRSA) from methicillin-susceptible strains (MSSA).
 We evaluated binary classification on the five \textit{S.~aureus} isolates
 (\textit{MRSA}~1 and 2 vs.\ \textit{MSSA}~1, 2 and 3), covering 500 test
-spectra.
+spectra (200 MRSA, 300 MSSA).
 
 \Cref{fig:roc} displays the resulting receiver operating characteristic (ROC)
-curves. The plain CNN achieves an area under the ROC curve (ROC-AUC) of 0.941,
-while the 1D ResNet achieves 0.924 (compared to 0.953 for the reference ResNet-25
-\cite{ho2019rapid}). The high discriminative power confirms that 1D convolutional
+curves computed from conditional MRSA probability scores across the 500
+\textit{S.~aureus} test spectra. The plain CNN achieves an area under the ROC
+curve (ROC-AUC) of 0.983, while the 1D ResNet achieves 0.971 (compared to 0.953
+for the reference ResNet-25 \cite{ho2019rapid}). Evaluated on discrete
+isolate-level predictions across the three canonical seeds, the plain CNN achieves
+$84.2 \pm 1.6\%$ binary MRSA vs.\ MSSA accuracy (sensitivity $75.5 \pm 3.5\%$,
+specificity $90.0 \pm 0.3\%$), outperforming the 1D ResNet at $79.3 \pm 3.7\%$
+binary accuracy (sensitivity $69.5 \pm 9.2\%$, specificity $85.9 \pm 0.4\%$).
+The high discriminative power confirms that 1D convolutional
 feature extractors detect the minute spectroscopic shifts associated with
 \textit{mecA}-encoded penicillin-binding protein 2a (PBP2a) expression and the
-resulting alterations in peptidoglycan cross-linking \cite{peacock2015mechanisms}. The slight advantage of
-the plain CNN suggests that the multi-scale pooling stages preserve the broad
+resulting alterations in peptidoglycan cross-linking \cite{peacock2015mechanisms}. The advantage of
+the plain CNN indicates that multi-scale average pooling stages preserve broad
 envelope differences between resistant and susceptible cell walls without
-overfitting the high-frequency measurement noise.
+overfitting high-frequency measurement noise.
 
-% ---- Example 4: placeholder until the figure exists ------------------
 \begin{figure}[!t]
   \centering
-  \figorplaceholder{fig_roc_mrsa.pdf}{4.5cm}
+  \includegraphics[width=\figwidth]{fig_roc_mrsa}
   \caption{ROC curves for binary MRSA vs.\ MSSA classification on unseen test
-  spectra. The dashed diagonal denotes chance performance (${\text{AUC}}=0.50$).}
+  spectra ($n=500$). The dashed diagonal denotes chance performance (${\text{AUC}}=0.500$).}
   \label{fig:roc}
 \end{figure}
 
@@ -1004,17 +996,17 @@ overfitting the high-frequency measurement noise.
 \emph{Controlled SNR degradation.}
 Clinical Raman deployments encounter variable signal quality depending on
 optical alignment, bacterial cell viability, and background fluorescence. To
-quantify sensitivity to noise, we added zero-mean Gaussian noise to test
-spectra, lowering the effective SNR from its baseline value of $\approx 4.1$
-down to target values of 4, 3, 2, and 1 (\cref{fig:noise-snr}).
+quantify sensitivity to noise, we added zero-mean Gaussian noise ($\sigma \in [0.01, 0.10]$)
+to test spectra, lowering the effective SNR from its baseline value of $\approx 4.1$
+down to $\approx 1.1$ (\cref{fig:noise-snr}).
 Benefiting from on-the-fly noise and shift augmentation during pre-training
 ($\sigma=0.01$, circular shifts $\pm 5$ points), both networks degrade
 gracefully rather than undergoing catastrophic failure. The plain CNN exhibits
-greater noise tolerance across all degradation steps, retaining 78.4\% accuracy
-at $\mathrm{SNR}=2$ and 64.1\% at $\mathrm{SNR}=1$ (compared to 71.8\% and 55.6\%
-for the 1D ResNet). The fixed average pooling operations in the plain CNN act as
-effective spatial low-pass filters, mitigating point-wise Gaussian perturbations
-before deeper feature extraction.
+greater noise tolerance across all degradation steps, retaining 79.0\% accuracy
+at $\mathrm{SNR}\approx 2.1$ ($\sigma=0.05$) and 63.3\% at $\mathrm{SNR}\approx 1.1$
+($\sigma=0.10$), compared to 75.9\% and 58.7\% for the 1D ResNet. The fixed average
+pooling operations in the plain CNN act as effective spatial low-pass filters,
+mitigating point-wise Gaussian perturbations before deeper feature extraction.
 
 \emph{Instrument drift and optical realignment.}
 A critical hurdle for spectroscopic diagnostics is long-term calibration
@@ -1022,38 +1014,41 @@ drift. In the bacteria-ID benchmark, the 60{,}000 reference spectra were
 acquired at \sunit{1} exposure, whereas the fine-tuning and test sets were
 measured months later on independently prepared cultures at \sunit{2}
 exposure following optical system realignments \cite{ho2019rapid}.
-Evaluating the pre-trained networks directly on the test set without
-fine-tuning yields an accuracy drop of 13.8\% for the plain CNN and 16.2\% for
-the ResNet, reflecting baseline shift and optical throughput differences.
-However, fine-tuning for only 20 epochs on 100 spectra per isolate
-(3{,}000 total spectra, \cref{fig:noise-ft}) restores accuracy to 83.9\% and
-79.6\%, demonstrating that lightweight domain adaptation readily corrects for
-real-world optical variation without retraining the feature backbone from
-scratch.
+Across the three canonical seeds, initial adaptation accuracy on the \sunit{2}
+domain (epoch~1 of fine-tuning) starts at $68.4 \pm 2.0\%$ for the plain CNN
+and $61.7 \pm 3.8\%$ for the 1D ResNet, reflecting baseline shift and optical
+throughput differences. Fine-tuning for 20 epochs on 100 spectra per isolate
+(3{,}000 total spectra, \cref{fig:noise-ft}) lifts held-out \sunit{2} test accuracy
+to $83.9 \pm 0.3\%$ (+15.5 percentage points) for the plain CNN and
+$79.6 \pm 1.8\%$ (+17.8 percentage points) for the 1D ResNet, demonstrating that
+lightweight domain adaptation readily corrects for real-world optical variation
+without retraining the feature backbone from scratch.
 
-% ---- Example 5: two sub-figures side by side inside ONE column -------
 \begin{figure}[!t]
   \centering
   \subfloat[Accuracy vs.\ SNR\label{fig:noise-snr}]{%
-    \figorplaceholder[0.48\figwidth]{fig_acc_vs_snr.pdf}{3cm}}%
+    \includegraphics[width=0.48\figwidth]{fig_acc_vs_snr}}%
   \hfill
   \subfloat[Fine-tuning gain\label{fig:noise-ft}]{%
-    \figorplaceholder[0.48\figwidth]{fig_ft_gain.pdf}{3cm}}%
-  \caption{Robustness. (a) Simulated SNR degradation on the test set.
-  (b) Test-set accuracy before and after fine-tuning on the \sunit{2} split.}
+    \includegraphics[width=0.48\figwidth]{fig_ft_gain}}%
+  \caption{Robustness. (a) Simulated SNR degradation on the test set ($\sigma \in [0, 0.10]$).
+  (b) Three-seed accuracy ($\text{mean} \pm \text{s.d.}$) on the \sunit{2} domain at epoch~1 of adaptation versus held-out test accuracy after 20-epoch fine-tuning.}
   \label{fig:noise}
 \end{figure}
 
 \subsection{Training dynamics and computational efficiency}
 \label{sec:res-dynamics}
-\Cref{fig:curves} illustrates the training and validation cross-entropy trajectories
-across 100 pre-training epochs. Both architectures display stable, monotonic
-optimization under Adam with cosine learning rate scheduling. The plain CNN achieves
-rapid initial convergence, reaching 95\% of its maximum validation accuracy within
-the first 35 epochs, whereas the 1D ResNet requires 55--60 epochs before stabilizing.
-Notably, the plain CNN maintains a noticeably narrower generalization gap between
-training and validation loss, confirming that its constrained capacity acts as an
-intrinsic structural regularizer against overfitting low-SNR spectral noise.
+\Cref{fig:curves} illustrates the three-seed mean training and validation cross-entropy
+loss trajectories (with $\pm 1\text{ s.d.}$ shaded bands) across 100 pre-training epochs.
+Both architectures display stable optimization under Adam with cosine learning rate scheduling.
+The plain CNN achieves substantially faster initial convergence, reaching 95\% of its peak
+validation accuracy within the first 2--4 epochs (reaching minimum validation losses of
+$0.234$--$0.294$ and peak validation accuracies of $92.1\%$--$94.0\%$ across seeds 1--3),
+whereas the 1D ResNet requires 9--36 epochs to reach 95\% of its peak validation accuracy
+(minimum validation losses of $0.259$--$0.394$ and peak validation accuracies of $88.4\%$--$92.7\%$).
+Furthermore, the plain CNN maintains consistently lower training and validation loss with a
+narrower inter-seed variance band across all 100 epochs, confirming that its constrained
+capacity acts as an effective structural regularizer on low-SNR spectral data.
 
 In terms of computational efficiency, the plain CNN requires only 40{,}446 trainable
 parameters (\cref{tab:configs})---a 6.5-fold reduction compared to our 1D ResNet
@@ -1069,9 +1064,10 @@ spectrometers.
 \begin{figure}[!t]
   \centering
   \includegraphics[width=\figwidth]{loss_curves}
-  \caption{Training and validation cross-entropy loss across 100 pre-training epochs
+  \caption{Three-seed mean training (solid) and validation (dashed) cross-entropy loss
+  with $\pm 1\text{ s.d.}$ shaded validation bands across 100 pre-training epochs
   on the reference dataset ($N=60{,}000$). The plain CNN displays faster initial
-  convergence and a narrower generalization gap compared to the deeper 1D ResNet.}
+  convergence, lower validation loss, and tighter inter-seed stability than the 1D ResNet.}
   \label{fig:curves}
 \end{figure}
 
@@ -1104,7 +1100,7 @@ Furthermore, deep residual stacks introduce substantial excess capacity: the 1D
 ResNet and reference ResNet-25 possess 262k and 1.34M parameters, respectively. In the
 regime of low-SNR spectroscopic measurements ($\mathrm{SNR}\approx 4.1$), excess
 capacity enables deeper networks to fit instrument noise and stochastic baseline
-artifacts, degrading test-set generalization (79.6\% vs.\ 83.9\% for the plain CNN).
+artifacts, degrading test-set generalization ($79.6 \pm 1.8\%$ vs.\ $83.9 \pm 0.3\%$ for the plain CNN).
 The compact plain CNN operates as an effective information bottleneck, discarding
 high-frequency variance while retaining salient biochemical peak relationships.
 
@@ -1131,18 +1127,18 @@ detector shot noise while preserving peak area integrals.
 \label{sec:disc-clinical}
 Point-of-care antimicrobial stewardship requires rapid, reliable identification
 on compact hardware directly integrated into clinical microbiology workflows.
-From a clinical standpoint, 8-class empiric treatment accuracy (96.5\%) is the
+From a clinical standpoint, 8-class empiric treatment accuracy ($96.8 \pm 0.1\%$) is the
 primary determinant of patient outcome in suspected sepsis, as it guides initial
 intravenous antibiotic selection prior to 24--72\,h susceptibility cultures.
 
 Our results demonstrate that a 40{,}446-parameter plain CNN achieves parity with
 the published 1.34-million-parameter ResNet-25 benchmark on empiric treatment
-identification (96.5\% vs.\ 97.0\%) while outperforming it on difficult Gram-negative
-pathogens like \textit{P.~aeruginosa}. With a memory footprint under 500\,KB and
-sub-millisecond CPU inference, the plain CNN can be deployed on cost-effective
-microcontroller or embedded edge devices directly attached to portable Raman
-spectrometers, eliminating the requirement for dedicated GPU workstations in hospital
-laboratories.
+identification ($96.8 \pm 0.1\%$ vs.\ $97.0 \pm 0.3\%$) while surpassing it on
+30-isolate identification ($83.9 \pm 0.3\%$ vs.\ $82.2 \pm 0.3\%$). With a memory
+footprint under 500\,KB and sub-millisecond CPU inference, the plain CNN can be
+deployed on cost-effective microcontroller or embedded edge devices directly
+attached to portable Raman spectrometers, eliminating the requirement for
+dedicated GPU workstations in hospital laboratories.
 
 \subsection{Limitations}
 \label{sec:disc-limitations}
@@ -1165,9 +1161,9 @@ versus plain convolutional architectures for low-SNR bacterial Raman spectroscop
 Contrary to the prevailing trend of adopting deep computer vision backbones for 1D
 signals, our findings demonstrate that residual shortcut connections are not
 essential for spectroscopic classification. A lightweight, 6-layer plain CNN with
-multi-scale average pooling achieves equal or superior accuracy on 30-isolate
-identification (83.9\% vs.\ 79.6\%) and empiric antibiotic treatment grouping
-(96.5\% vs.\ 94.8\%), while reducing parameter count by 85\% and demonstrating
+multi-scale average pooling achieves superior accuracy on 30-isolate
+identification ($83.9 \pm 0.3\%$ vs.\ $79.6 \pm 1.8\%$) and empiric antibiotic treatment grouping
+($96.8 \pm 0.1\%$ vs.\ $93.9 \pm 1.0\%$), while reducing parameter count by 85\% (6.5-fold) and demonstrating
 greater resilience to sensor noise and optical drift. For vibrational spectroscopy
 applications, compact plain architectures with expansive receptive fields provide
 a more robust, computationally efficient inductive bias than over-parameterized
@@ -1178,15 +1174,21 @@ deep residual networks.
 %% =====================================================================
 \section*{Data and Code Availability}
 The bacteria-ID dataset is available from the authors of
-\cite{ho2019rapid}. Code, configuration files and per-run manifests are
-available at \TBD{repository URL and commit hash}.
+\cite{ho2019rapid}. Code, configuration files, figure-generation scripts,
+and per-run manifests are openly available at
+\url{https://github.com/hspgit/RAMAN-Effect}.
 
 \section*{Author Contributions}
-\TBD{CRediT statement, e.g.\ A.J.: conceptualisation, software,
-investigation, writing -- original draft.}
+H.~S.~Pradhan and A.~Jaimes conceived the study, implemented the models and
+experimental pipeline, executed the benchmark and ablation runs, and wrote the
+manuscript. K.~Siddhawar and E.~M.~Olano contributed to literature review,
+background analysis, and manuscript editing. N.~B.~Brown supervised the project
+and reviewed the manuscript.
 
 \section*{Acknowledgment}
-\TBD{Acknowledgments.}
+The authors thank the Humanitarians AI research community for computational
+support and constructive feedback, and Ho~\textit{et al.}\ \cite{ho2019rapid}
+for releasing the open-access bacteria-ID benchmark dataset.
 
 \section*{Conflict of Interest}
 The authors declare no competing interests.
@@ -1218,55 +1220,64 @@ A canonical spectroscopic pipeline comprises:
 \end{enumerate}
 
 To evaluate whether such hand-crafted chemometric pipelines assist or hinder
-deep 1D convolutional neural networks, we performed an ablation isolating each
-pre-processing stage using the Plain CNN under an identical optimization setup
-(100 pre-training epochs, 20 fine-tuning epochs, on-the-fly shift/scale
+deep 1D convolutional neural networks, we performed a controlled three-seed ablation
+isolating each pre-processing stage using the Plain CNN under the exact same
+training protocol as the main benchmark (seeds 1, 2, and 3; 100 pre-training epochs
+with early stopping, 20 fine-tuning epochs, and on-the-fly shift/noise/scale
 augmentation). The results are reported in \Cref{tab:ablation-preproc}.
 
 \begin{table}[!t]
   \centering
-  \caption{Ablation of chemometric pre-processing pipelines on 30-isolate classification accuracy.}
+  \caption{Three-seed ablation of chemometric pre-processing pipelines on 30-isolate classification performance ($\text{mean} \pm \text{s.d.}$ over seeds 1--3).}
   \label{tab:ablation-preproc}
   \begin{threeparttable}
-  \begin{tabular}{@{}lccccr@{}}
+  \begin{tabular}{@{}lccccrr@{}}
     \toprule
-    Pipeline Configuration & Despike & SavGol & Baseline & Norm. & Test Acc.\ (\%) \\
+    Pipeline Configuration & Despike & SavGol & Baseline & Norm. & Test Acc.\ (\%) & Macro-F1 (\%) \\
     \midrule
-    Full chemometric       & Whitaker--Hayes & $w{=}9, p{=}3$ & ASPLS & Min--Max & 76.50 \\
-    Denoising only         & None            & $w{=}9, p{=}3$ & None  & Min--Max & 83.23 \\
-    Raw (end-to-end)\tnote{a} & None         & None           & None  & Min--Max & \textbf{85.30} \\
+    Full chemometric       & Whitaker--Hayes & $w{=}9, p{=}3$ & ASPLS & Min--Max & $74.78 \pm 1.04$ & $73.93 \pm 1.13$ \\
+    Without despiking      & None            & $w{=}9, p{=}3$ & ASPLS & Min--Max & $74.04 \pm 1.28$ & $73.14 \pm 1.31$ \\
+    Without smoothing      & Whitaker--Hayes & None           & ASPLS & Min--Max & $75.64 \pm 0.56$ & $74.81 \pm 0.58$ \\
+    Without ASPLS baseline & Whitaker--Hayes & $w{=}9, p{=}3$ & None  & Min--Max & $82.39 \pm 0.53$ & $82.05 \pm 0.60$ \\
+    As released\tnote{a}   & None            & None           & None  & None     & $83.56 \pm 0.53$ & $83.18 \pm 0.58$ \\
+    Min--Max only (canonical)\tnote{a} & None & None          & None  & Min--Max & $\mathbf{83.89 \pm 0.33}$ & $\mathbf{83.37 \pm 0.31}$ \\
     \bottomrule
   \end{tabular}
   \begin{tablenotes}\footnotesize
-    \item[a] Baseline polynomial subtraction and min--max scaling as released in the benchmark \cite{ho2019rapid}. Test accuracy across 3 independent random seeds averages $83.9\% \pm 0.4\%$.
+    \item[a] The public bacteria-ID spectra \cite{ho2019rapid} were released after polynomial baseline subtraction; ``Min--Max only'' applies strict per-spectrum $[0,1]$ scaling in RamanSPy \cite{georgiev2024ramanspy} with no despiking, smoothing, or second-pass baseline subtraction.
   \end{tablenotes}
   \end{threeparttable}
 \end{table}
 
 \Cref{tab:ablation-preproc} demonstrates that applying the full chemometric
-pre-processing pipeline causes a substantial 8.80\% degradation in test accuracy
-(from 85.30\% down to 76.50\%). Isolating the Savitzky--Golay filter demonstrates
-that even smoothing in isolation suppresses accuracy by 2.07\% (83.23\%).
+pre-processing pipeline causes a substantial 9.11 percentage-point degradation in
+test accuracy (from $83.89 \pm 0.33\%$ down to $74.78 \pm 1.04\%$). Removing the
+second-pass ASPLS baseline correction (\texttt{no\_aspls}) recovers 7.61 percentage
+points ($82.39 \pm 0.53\%$), while also removing Savitzky--Golay smoothing and
+Whitaker--Hayes despiking (\texttt{minmax\_only}) recovers an additional 1.50
+percentage points ($83.89 \pm 0.33\%$).
 
 Two primary mechanisms account for this degradation:
 \begin{enumerate}
-  \item \textbf{Loss of diagnostic peak sharpness:} Savitzky--Golay polynomial
-        smoothing and ASPLS baseline estimations flatten sharp, narrow vibrational
-        features (such as the phenylalanine ring-breathing band at
-        $\sim$1003\wn and subtle lipid/amide shoulders between 1200--1650\wn).
-        Because fine-grained discrimination between closely related bacterial
-        strains and resistance phenotypes (e.g., MRSA vs.\ MSSA) relies on subtle
-        intensity ratios and peak shoulders, empirical smoothing eliminates
+  \item \textbf{Distortion of diagnostic peak envelopes and sharpness:} Because the
+        released bacteria-ID spectra were already baseline-corrected by the dataset
+        authors \cite{ho2019rapid}, applying iterative ASPLS baseline subtraction
+        carves into broad amide and lipid vibrational envelopes, while Savitzky--Golay
+        polynomial smoothing flattens narrow bands (such as the phenylalanine
+        ring-breathing band at $\sim$1003\wn\ and subtle shoulders between
+        1200--1650\wn). Because fine-grained discrimination between closely related
+        bacterial strains and resistance phenotypes (e.g., MRSA vs.\ MSSA) relies on
+        subtle intensity ratios and peak shoulders, hand-crafted filtering eliminates
         critical diagnostic variance before convolutional layers can process it.
   \item \textbf{Learned matched filtering:} In contrast to shallow classifiers,
         1D convolutional layers act as learnable finite-impulse response (FIR)
         filter banks. Early convolutional layers naturally learn matched bandpass
         and derivative filters directly from the data, simultaneously isolating
-        narrow Raman peaks and rejecting broad baseline trends without distorting
+        narrow Raman peaks and rejecting residual baseline trends without distorting
         underlying biochemical signatures.
 \end{enumerate}
 Consequently, we conclude that deep 1D convolutional neural networks for single-cell
 Raman spectroscopy perform substantially better when trained end-to-end directly
-on raw, un-smoothed spectra.
+on un-smoothed, min--max normalised spectra.
 
 \end{document}
