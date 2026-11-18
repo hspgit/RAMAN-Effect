@@ -163,7 +163,7 @@ If you find this work, benchmark, or codebase useful, please cite:
 ```bibtex
 @article{raman_plain_cnn_benchmark2026,
   title   = {Residual Connections Are Not Required for 1D Bacterial {Raman} Spectra: A Controlled Clinical Benchmark},
-  author  = {Pradhan, Hrishikesh and Jaimes, Amos and others},
+  author  = {Pradhan, Hrishikesh Suresh and Jaimes, Amos and Siddhawar, K. and Olano, Edward M. and Brown, Nik Bear},
   journal = {arXiv preprint},
   year    = {2026}
 }
